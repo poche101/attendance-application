@@ -28,8 +28,12 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     Route::get('/rankings', [AdminController::class, 'rankings'])->name('rankings');
 
     // Member Operations Management
-Route::get('/members', [MemberController::class, 'index'])->name('members');    Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
+    Route::post('/members', [MemberController::class, 'store'])->name('members.store');
     Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
+    Route::delete('/members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+
+    // Legacy deactivate route (if still needed)
     Route::patch('/members/{member}/deactivate', [MemberController::class, 'deactivate'])->name('members.deactivate');
 
     // Aggregation & Data Export Engine

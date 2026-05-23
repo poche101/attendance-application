@@ -21,10 +21,8 @@ return new class extends Migration
     $table->string('last_name', 100);
     $table->string('email', 255)->unique();
     $table->string('phone', 30)->nullable();
-    $table->string('group', 100)->nullable();
     $table->string('church', 150)->nullable();
     $table->string('cell', 150)->nullable();
-    $table->date('birthday')->nullable();
     $table->boolean('is_active')->default(true);
     $table->timestamps();
 });

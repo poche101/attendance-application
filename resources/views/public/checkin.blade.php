@@ -6,22 +6,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-/* ── Design tokens (mirrors Shorta index.html) ─────────────────── */
+/* ── Design tokens ─────────────────── */
 :root {
-  --ink:        #0d0d0d;
-  --paper:      #f5f0e8;
-  --cream:      #ede7d9;
-  --border:     #c8c0b0;
-  --muted:      #6b6256;
+  --ink:        #0f172a;
+  --paper:      #f8fafc;
+  --cream:      #f1f5f9;
+  --border:     #e2e8f0;
+  --muted:      #64748b;
   --white:      #ffffff;
-  --accent:     #C45E08;   /* terracotta – kept from original */
-  --accent-2:   #F0A055;   /* amber      – kept from original */
-  --accent-soft:#FEE9CF;
+  --accent:     #1e40af;     /* Main Blue */
+  --accent-2:   #3b82f6;     /* Light Blue */
+  --accent-soft:#dbeafe;
   --radius:     14px;
   --radius-sm:  8px;
   --radius-lg:  22px;
-  --shadow:     0 2px 18px rgba(13,13,13,.10);
-  --shadow-lg:  0 10px 48px rgba(13,13,13,.18);
+  --shadow:     0 4px 20px rgba(15,23,42,.08);
+  --shadow-lg:  0 10px 48px rgba(15,23,42,.12);
   --font-head:  'Syne', sans-serif;
   --font-body:  'DM Sans', sans-serif;
   --max-w:      440px;
@@ -48,11 +48,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   flex-direction: column;
 }
 
-/* ── Hero bar (mirrors Shorta dark header) ──────────────────────── */
+/* ── Hero bar ──────────────────────── */
 .checkin-hero {
   position: relative;
   background: var(--ink);
-  color: var(--paper);
+  color: white;
   overflow: hidden;
   padding: 0 24px;
 }
@@ -96,7 +96,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   align-items: center;
   justify-content: space-between;
   padding: 20px 0 16px;
-  border-bottom: 1px solid rgba(245,240,232,.1);
+  border-bottom: 1px solid rgba(255,255,255,.1);
   max-width: var(--max-w);
   margin: 0 auto;
   width: 100%;
@@ -107,15 +107,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   font-weight: 800;
   letter-spacing: -.02em;
 }
-.hero-logo span { color: var(--accent); }
+.hero-logo span { color: var(--accent-2); }
 
 .hero-date-badge {
   font-size: .68rem;
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
-  background: rgba(245,240,232,.09);
-  border: 1px solid rgba(245,240,232,.16);
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
   color: var(--accent-2);
   padding: 5px 11px;
   border-radius: 99px;
@@ -165,7 +165,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -.03em;
-  color: var(--paper);
+  color: white;
   margin-bottom: 12px;
 }
 .hero-title em {
@@ -176,7 +176,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .hero-sub {
   font-size: .9rem;
   line-height: 1.6;
-  color: rgba(245,240,232,.65);
+  color: rgba(255,255,255,.75);
   max-width: 320px;
   margin-bottom: 28px;
 }
@@ -185,8 +185,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .qr-tile {
   width: 148px; height: 148px;
   border-radius: var(--radius);
-  background: rgba(254,233,207,.07);
-  border: 1.5px dashed rgba(240,160,85,.35);
+  background: rgba(219,234,254,.1);
+  border: 1.5px dashed rgba(59,130,246,.4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -207,7 +207,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   font-size: .6rem;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: rgba(240,160,85,.6);
+  color: rgba(59,130,246,.7);
   font-family: var(--font-body);
 }
 
@@ -225,7 +225,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   max-width: var(--max-w);
 }
 
-/* ── Cards (all states share base) ─────────────────────────────── */
+/* ── Cards ─────────────────────────────── */
 .state-card {
   background: var(--white);
   border: 1.5px solid var(--border);
@@ -248,11 +248,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   align-items: center;
   justify-content: center;
   margin: 0 auto 22px;
-  box-shadow: 0 8px 32px rgba(196,94,8,.14);
+  box-shadow: 0 8px 32px rgba(30,64,175,.12);
 }
-.state-icon-wrap.warm  { background: linear-gradient(135deg, #FEE9CF, #FAD9B5); }
-.state-icon-wrap.amber { background: linear-gradient(135deg, #fef3c7, #fde68a); }
-.state-icon-wrap.red   { background: linear-gradient(135deg, #fee2e2, #fecaca); box-shadow: 0 8px 32px rgba(153,27,27,.1); }
+.state-icon-wrap.warm  { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+.state-icon-wrap.amber { background: linear-gradient(135deg, #bfdbfe, #93c5fd); }
+.state-icon-wrap.red   { background: linear-gradient(135deg, #fee2e2, #fecaca); }
 
 .state-heading {
   font-family: var(--font-head);
@@ -277,7 +277,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
 .state-body.error-text { color: #991b1b; font-weight: 500; margin-bottom: 16px; }
 
-/* CTA button (reused across state cards) */
+/* CTA button */
 .state-btn {
   display: inline-block;
   margin-top: 22px;
@@ -292,13 +292,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   border: none;
   cursor: pointer;
   transition: background .18s, transform .12s, box-shadow .18s;
-  box-shadow: 0 4px 18px rgba(196,94,8,.3);
+  box-shadow: 0 4px 18px rgba(30,64,175,.3);
   text-decoration: none;
 }
-.state-btn:hover  { background: #A84E06; box-shadow: 0 6px 24px rgba(196,94,8,.42); }
+.state-btn:hover  { background: #1e3a8a; box-shadow: 0 6px 24px rgba(30,64,175,.42); }
 .state-btn:active { transform: scale(.97); }
 
-/* Outline variant (error state) */
+/* Outline variant */
 .btn-outline-terracotta {
   display: inline-block;
   padding: 10px 28px;
@@ -336,7 +336,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .field-input {
   width: 100%;
-  background: var(--paper);
+  background: white;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -373,13 +373,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   border-radius: var(--radius);
   cursor: pointer;
   transition: background .18s, box-shadow .18s, transform .12s;
-  box-shadow: 0 4px 18px rgba(196,94,8,.32);
+  box-shadow: 0 4px 18px rgba(30,64,175,.32);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
-.submit-btn:hover  { background: #A84E06; box-shadow: 0 6px 26px rgba(196,94,8,.44); }
+.submit-btn:hover  { background: #1e3a8a; box-shadow: 0 6px 26px rgba(30,64,175,.44); }
 .submit-btn:active { transform: scale(.98); }
 
 /* ── Footer hint ────────────────────────────────────────────────── */
@@ -432,7 +432,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         @php $on = [0,1,2,3,4,5,6,7,14,21,28,35,42,43,44,45,46,47,48,6,13,20,27,34,41,3,10,17,24,38]; @endphp
         <div class="qr-grid" aria-hidden="true">
           @for($i=0;$i<49;$i++)
-            <div class="qr-cell" style="background:{{ in_array($i,$on) ? '#C45E08' : 'rgba(240,160,85,0.18)' }};"></div>
+            <div class="qr-cell" style="background:{{ in_array($i,$on) ? '#1e40af' : 'rgba(59,130,246,0.18)' }};"></div>
           @endfor
         </div>
         <span class="qr-caption">Scan or Enter Email</span>
@@ -457,9 +457,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
       @elseif(session('status') === 'success')
         <div class="state-card" role="status">
           <div class="state-icon-wrap warm" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="#C45E08">
+            <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="#1e40af">
               <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" fill="#E8A96A"/>
+              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" fill="#93c5fd"/>
             </svg>
           </div>
 
@@ -477,7 +477,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         <div class="state-card" role="status">
           <div class="state-icon-wrap amber" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-                 stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                 stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>

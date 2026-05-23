@@ -8,83 +8,104 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin user
+        $this->command->info('🚀 Seeding Church Members...');
+
+        // Admin User
         User::updateOrCreate(['email' => 'admin@church.org'], [
             'name'     => 'Church Admin',
             'email'    => 'admin@church.org',
-            'password' => Hash::make('admin123'),
+            'password' => Hash::make('password'),
         ]);
 
-        // Path to your CSV file
-        $csvPath = base_path('database/seeders/data/users.csv'); // Move your file here
+        $csvPath = database_path('seeders/data/members.csv');
 
         if (!file_exists($csvPath)) {
-            $this->command->error("CSV file not found at: " . $csvPath);
+            $this->command->error("❌ CSV not found at: {$csvPath}");
             return;
         }
 
-        $this->command->info('Starting to seed members from CSV...');
+        $this->command->info("📂 Processing CSV...");
 
-        $handle = fopen($csvPath, 'r');
-        $header = fgetcsv($handle); // Skip header
+        $lines = file($csvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        array_shift($lines); // Remove header
 
         $count = 0;
-        $batch = [];
 
-        while (($row = fgetcsv($handle)) !== false) {
-            if (empty($row[7])) continue; // Skip if no email
+        foreach ($lines as $line) {
+            // Remove outer quotes and parse
+            $line = trim($line, '"');
+            $row = str_getcsv($line, ",", "\"", "\\");
+
+            if (count($row) < 7) {
+                continue;
+            }
+
+            $email = strtolower(trim($row[6] ?? ''));
+            if (empty($email) || !str_contains($email, '@')) {
+                continue;
+            }
+
+            $phone = $this->cleanPhone($row[5] ?? '');
 
             $memberData = [
-                'title'      => $row[1] ?? null,
-                'first_name' => $row[2] ?? null,
-                'last_name'  => $row[3] ?? null,
-                'email'      => $row[7] ?? null,
-                'phone'      => $row[6] ?? null,
-                'group'      => $row[5] ?? null,      // cell
-                'church'     => $row[4] ?? null,      // church_id
-                'cell'       => $row[5] ?? null,
-                'birthday'   => !empty($row[10]) && $row[10] !== 'NULL' ? $row[10] : null,
+                'title'      => trim($row[0] ?? ''),
+                'first_name' => trim($row[1] ?? ''),
+                'last_name'  => trim($row[2] ?? ''),
+                'church'     => trim($row[3] ?? 'Lekki'),
+                'cell'       => trim($row[4] ?? ''),
+                'phone'      => $phone,
+                'email'      => $email,
                 'is_active'  => true,
             ];
 
-            Member::updateOrCreate(
-                ['email' => $memberData['email']],
-                $memberData
-            );
+            Member::updateOrCreate(['email' => $email], $memberData);
 
             $count++;
 
-            if ($count % 500 === 0) {
-                $this->command->info("Seeded {$count} members...");
+            if ($count % 1000 === 0) {
+                $this->command->info("✅ Seeded {$count} members...");
             }
         }
 
-        fclose($handle);
+        $this->command->info("🎉 Successfully seeded {$count} members!");
 
-        $this->command->info("✅ Successfully seeded {$count} members!");
+        $this->seedSampleAttendance();
+    }
 
-        // Sample attendance
+    private function cleanPhone(string $phone): string
+    {
+        $phone = trim($phone);
+        if (empty($phone)) return '';
+
+        if (stripos($phone, 'E') !== false) {
+            $phone = (string) (int) floatval($phone);
+        }
+
+        $phone = preg_replace('/[^0-9+]/', '', $phone);
+
+        if (strlen($phone) === 11 && str_starts_with($phone, '0')) {
+            $phone = '234' . substr($phone, 1);
+        }
+
+        return $phone;
+    }
+
+    private function seedSampleAttendance(): void
+    {
         $today = Carbon::today()->toDateString();
-        $sampleEmails = [
-            'seyitade@yahoo.com',
-            'tyadeoye@gmail.com',
-            'oluwadarelord@yahoo.com',
-            'esosaking@gmail.com',
-            'jeromemordi@yahoo.com',
-        ];
+        $samples = ['seyitade@yahoo.com', 'oluwadarelord@yahoo.com', 'esosaking@gmail.com'];
 
-        foreach ($sampleEmails as $email) {
+        foreach ($samples as $email) {
             $member = Member::where('email', $email)->first();
             if ($member) {
                 Attendance::updateOrCreate(
-                    ['email' => $email, 'attendance_date' => $today],
-                    ['member_id' => $member->id, 'submitted_at' => Carbon::now()]
+                    ['member_id' => $member->id, 'attendance_date' => $today],
+                    ['submitted_at' => now()]
                 );
             }
         }

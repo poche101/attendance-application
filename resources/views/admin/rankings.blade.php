@@ -2,58 +2,111 @@
 @section('title', 'Top Rankings')
 
 @section('main')
-<div style="margin-bottom:24px;">
-    <span style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#B86A1A; font-family:'Jost',sans-serif;">Leaderboards</span>
-    <h2 class="cg" style="font-size:32px; margin:4px 0 16px; color:#1E1208; font-weight:500;">Top 10 Rankings</h2>
-    <form method="GET" action="{{ route('admin.rankings') }}" style="display:flex; gap:12px;">
-        <div>
-            <label style="font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:#B86A1A; margin-bottom:5px; display:block; font-family:'Jost',sans-serif;">From</label>
-            <input type="date" name="from" value="{{ $from }}" onchange="this.form.submit()"
-                style="width:160px; border:1px solid #FAD9B5; border-radius:8px; padding:8px 12px; font-size:13px; background:#FFFBF5; color:#1E1208; font-family:'Jost',sans-serif;">
-        </div>
-        <div>
-            <label style="font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:#B86A1A; margin-bottom:5px; display:block; font-family:'Jost',sans-serif;">To</label>
-            <input type="date" name="to" value="{{ $to }}" onchange="this.form.submit()"
-                style="width:160px; border:1px solid #FAD9B5; border-radius:8px; padding:8px 12px; font-size:13px; background:#FFFBF5; color:#1E1208; font-family:'Jost',sans-serif;">
-        </div>
-    </form>
+
+{{-- Header --}}
+<div class="mb-6">
+    <p class="text-xs font-body tracking-widest uppercase text-slate-400 mb-1">Leaderboards</p>
+    <h2 class="font-head text-3xl text-slate-900">Top 10 Rankings</h2>
 </div>
 
-<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
-    @foreach([['Top Cells', $cells, '🏆'],['Top Groups',$groups,'🎯'],['Top Churches',$churches,'⛪']] as [$title,$data,$icon])
-    @php $maxVal = $data->first()['count'] ?? 1; @endphp
-    <div style="background:#fff; border:1px solid #FAD9B5; border-radius:12px; overflow:hidden;">
-        <div style="padding:18px 20px; border-bottom:1px solid #FAD9B5; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">{{ $icon }}</span>
-            <h3 class="cg" style="margin:0; font-size:20px; color:#1E1208; font-weight:500;">{{ $title }}</h3>
+{{-- Date range filter --}}
+<form method="GET" action="{{ route('admin.rankings') }}" class="flex items-end gap-4 mb-8 p-4 bg-white border border-slate-200 rounded-2xl w-fit">
+    <div>
+        <label class="block text-xs font-body font-medium uppercase tracking-wider text-slate-400 mb-1.5">From</label>
+        <input type="date" name="from" value="{{ $from }}" onchange="this.form.submit()"
+            class="form-input font-body text-sm text-slate-800 bg-slate-50 focus:outline-none"
+            style="width:160px;">
+    </div>
+    <div>
+        <label class="block text-xs font-body font-medium uppercase tracking-wider text-slate-400 mb-1.5">To</label>
+        <input type="date" name="to" value="{{ $to }}" onchange="this.form.submit()"
+            class="form-input font-body text-sm text-slate-800 bg-slate-50 focus:outline-none"
+            style="width:160px;">
+    </div>
+    <div class="flex items-center gap-2 px-4 py-2.5 bg-blue-50 rounded-xl border border-blue-100">
+        <span class="text-xs font-body text-blue-600 font-medium">
+            {{ \Carbon\Carbon::parse($from)->format('d M Y') }} — {{ \Carbon\Carbon::parse($to)->format('d M Y') }}
+        </span>
+    </div>
+</form>
+
+{{-- Three ranking cards --}}
+<div class="grid grid-cols-3 gap-6">
+    @foreach([
+        ['title'=>'Top Cells',    'data'=>$cells,    'icon'=>'🏆', 'accent'=>'#1E40AF', 'soft'=>'#DBEAFE', 'bar'=>'bg-blue-500'],
+        ['title'=>'Top Groups',   'data'=>$groups,   'icon'=>'🎯', 'accent'=>'#065f46', 'soft'=>'#d1fae5', 'bar'=>'bg-emerald-500'],
+        ['title'=>'Top Churches', 'data'=>$churches, 'icon'=>'⛪', 'accent'=>'#7c3aed', 'soft'=>'#ede9fe', 'bar'=>'bg-violet-500'],
+    ] as $card)
+    @php $maxVal = $card['data']->first()['count'] ?? 1; @endphp
+
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+
+        {{-- Card header --}}
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3"
+             style="background: linear-gradient(135deg, {{ $card['soft'] }}55 0%, #fff 100%);">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                 style="background:{{ $card['soft'] }};">
+                {{ $card['icon'] }}
+            </div>
+            <div>
+                <h3 class="font-head text-lg text-slate-900 leading-tight">{{ $card['title'] }}</h3>
+                <p class="text-xs font-body text-slate-400 mt-0.5">{{ $card['data']->count() }} entries</p>
+            </div>
         </div>
-        <div style="padding:14px 20px;">
-            @if($data->isEmpty())
-            <p style="font-size:13px; color:#F0A055; font-family:'Jost',sans-serif;">No data in selected range.</p>
+
+        {{-- Rows --}}
+        <div class="px-6 py-4">
+            @if($card['data']->isEmpty())
+                <div class="text-center py-8">
+                    <p class="text-slate-400 font-body text-sm">No data in selected range.</p>
+                </div>
             @endif
-            @foreach($data as $i => $item)
-            @php $pct = round(($item['count']/$maxVal)*100); @endphp
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-                <span style="font-size:16px; width:26px; text-align:center; flex-shrink:0;">
-                    {{ ['🥇','🥈','🥉'][$i] ?? '#'.($i+1) }}
-                </span>
-                <div style="flex:1; min-width:0;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span style="font-size:13px; color:#1E1208; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:72%; font-family:'Jost',sans-serif;">
+
+            @foreach($card['data'] as $i => $item)
+            @php
+                $pct    = round(($item['count'] / $maxVal) * 100);
+                $medals = ['🥇','🥈','🥉'];
+            @endphp
+            <div class="flex items-center gap-3 py-2.5 {{ !$loop->last ? 'border-b border-slate-50' : '' }}">
+
+                {{-- Rank --}}
+                <div class="w-7 text-center flex-shrink-0">
+                    @if($i < 3)
+                        <span class="text-lg">{{ $medals[$i] }}</span>
+                    @else
+                        <span class="font-head text-sm text-slate-400">#{{ $i + 1 }}</span>
+                    @endif
+                </div>
+
+                {{-- Bar + label --}}
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-1.5">
+                        <span class="font-body text-sm font-medium text-slate-800 truncate max-w-[65%]">
                             {{ $item['name'] }}
                         </span>
-                        <span style="font-size:12px; color:#C45E08; font-weight:600; font-family:'Jost',sans-serif; flex-shrink:0; margin-left:6px;">
+                        <span class="font-head text-sm font-bold flex-shrink-0 ml-2"
+                              style="color:{{ $card['accent'] }};">
                             {{ $item['count'] }}
+                            <span class="font-body font-normal text-slate-400 text-xs">pts</span>
                         </span>
                     </div>
-                    <div style="background:#FEE9CF; border-radius:4px; height:7px;">
-                        <div style="background:linear-gradient(90deg,#F0A055,#C45E08); border-radius:4px; height:7px; width:{{ $pct }}%;"></div>
+                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                        <div class="{{ $card['bar'] }} h-1.5 rounded-full transition-all duration-500"
+                             style="width:{{ $pct }}%;"></div>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
+
+        {{-- Footer total --}}
+        <div class="px-6 py-3 border-t border-slate-100 bg-slate-50">
+            <p class="text-xs font-body text-slate-400">
+                Total: <span class="font-semibold text-slate-600">{{ $card['data']->sum('count') }}</span> check-ins
+            </p>
+        </div>
     </div>
     @endforeach
 </div>
+
 @endsection

@@ -21,8 +21,8 @@ class MemberController extends Controller
             });
         }
 
-        if ($group = $request->get('group')) {
-            $query->where('group', 'like', "%$group%");
+        if ($cell = $request->get('cell')) {
+            $query->where('cell', 'like', "%$cell%");
         }
 
         if ($church = $request->get('church')) {
@@ -39,27 +39,27 @@ class MemberController extends Controller
             });
         }
 
-        // Fetch today's records matching via BOTH tracking formats (id and email) for absolute safety
+        // Fetch today's attendance records
         $todayAttendance = Attendance::whereDate('attendance_date', now()->toDateString())->get();
-
-        $todayMemberIds = $todayAttendance->pluck('member_id')->filter()->toArray();
-        $todayEmails = $todayAttendance->pluck('email')
+        $todayMemberIds  = $todayAttendance->pluck('member_id')->filter()->toArray();
+        $todayEmails     = $todayAttendance->pluck('email')
             ->map(fn($e) => strtolower(trim($e)))
             ->filter()
             ->toArray();
 
-        // Filter by present/absent status using custom matrix tracking fallback loops
+        // Status filter
         if ($request->get('status') === 'present') {
-            $query->where(function ($q) use ($todayMemberIds, $todayEmails) {
-                $q->whereIn('id', $todayMemberIds);
-                if (!empty($todayEmails)) {
-                    $q->orWhereIn(DB::raw('LOWER(email)'), $todayEmails);
-                }
-            });
-
-            // If absolutely nobody was found present, force empty results block smoothly
             if (empty($todayMemberIds) && empty($todayEmails)) {
                 $query->whereRaw('1 = 0');
+            } else {
+                $query->where(function ($q) use ($todayMemberIds, $todayEmails) {
+                    if (!empty($todayMemberIds)) {
+                        $q->whereIn('id', $todayMemberIds);
+                    }
+                    if (!empty($todayEmails)) {
+                        $q->orWhereIn(DB::raw('LOWER(email)'), $todayEmails);
+                    }
+                });
             }
         } elseif ($request->get('status') === 'absent') {
             if (!empty($todayMemberIds)) {
@@ -70,30 +70,32 @@ class MemberController extends Controller
             }
         }
 
-        $sortCol = in_array($request->get('sort'), ['first_name','last_name','email','group','church','cell'])
+        // Sorting — include title now
+        $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'email', 'cell', 'church'])
             ? $request->get('sort') : 'first_name';
         $sortDir = $request->get('dir') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortCol, $sortDir);
 
         $members = $query->paginate(8)->withQueryString();
 
-        // Fetch counts accurately regardless of database schema style mappings
-        $memberIds = $members->pluck('id');
+        // Attendance counts for displayed members
+        $memberIds    = $members->pluck('id')->filter()->toArray();
         $memberEmails = $members->pluck('email')->map(fn($e) => strtolower(trim($e)))->toArray();
 
-        $memberAttCounts = Attendance::whereIn('member_id', $memberIds)
-            ->orWhereIn(DB::raw('LOWER(email)'), $memberEmails)
-            ->selectRaw('member_id, email, COUNT(*) as cnt')
-            ->groupBy('member_id', 'email')
+        $memberAttCounts = Attendance::where(function ($q) use ($memberIds, $memberEmails) {
+                if (!empty($memberIds))    $q->whereIn('member_id', $memberIds);
+                if (!empty($memberEmails)) $q->orWhereIn(DB::raw('LOWER(email)'), $memberEmails);
+            })
+            ->selectRaw('member_id, LOWER(email) as email_lower, COUNT(*) as cnt')
+            ->groupBy('member_id', 'email_lower')
             ->get()
             ->reduce(function ($carry, $item) use ($members) {
-                // Map counters to the explicit ID key context your Blade template targets
-                $matchedMember = $members->first(function($m) use ($item) {
-                    return $m->id == $item->member_id || strtolower(trim($m->email)) === strtolower(trim($item->email));
-                });
-
-                if ($matchedMember) {
-                    $carry[$matchedMember->id] = ($carry[$matchedMember->id] ?? 0) + $item->cnt;
+                $match = $members->first(fn($m) =>
+                    ($item->member_id && $m->id == $item->member_id) ||
+                    strtolower(trim($m->email)) === $item->email_lower
+                );
+                if ($match) {
+                    $carry[$match->id] = ($carry[$match->id] ?? 0) + $item->cnt;
                 }
                 return $carry;
             }, []);
@@ -113,10 +115,8 @@ class MemberController extends Controller
             'last_name'  => 'required|string|max:100',
             'email'      => 'required|email|unique:members,email',
             'phone'      => 'nullable|string|max:30',
-            'group'      => 'nullable|string|max:100',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
-            'birthday'   => 'nullable|date',
         ]);
 
         Member::create($data + ['is_active' => true]);
@@ -131,19 +131,17 @@ class MemberController extends Controller
             'last_name'  => 'required|string|max:100',
             'email'      => 'required|email|unique:members,email,' . $member->id,
             'phone'      => 'nullable|string|max:30',
-            'group'      => 'nullable|string|max:100',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
-            'birthday'   => 'nullable|date',
         ]);
 
         $member->update($data);
         return back()->with('toast', 'Member updated.');
     }
 
-    public function deactivate(Member $member)
+    public function destroy(Member $member)
     {
-        $member->update(['is_active' => false]);
-        return back()->with('toast', 'Member deactivated.');
+        $member->delete();
+        return back()->with('toast', 'Member deleted successfully.');
     }
 }
