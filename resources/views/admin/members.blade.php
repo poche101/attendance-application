@@ -8,23 +8,24 @@
 @endphp
 
 {{-- Header --}}
-<div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px;">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
     <div>
-        <span style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#2563eb; font-family:var(--font-body);">Directory</span>
-        <h2 style="font-size:32px; margin:4px 0 0; color:#1e2937; font-weight:600;">Member Management</h2>
+        <span class="text-xs font-body uppercase tracking-widest text-blue-600">Directory</span>
+        <h2 class="text-2xl md:text-3xl mt-1 text-slate-800 font-semibold tracking-tight">Member Management</h2>
     </div>
-    <div style="display:flex; gap:10px;">
-        <a href="{{ route('admin.export.csv') }}" class="btn-outline" style="font-size:12px; padding:8px 16px;">↓ Export CSV</a>
+    <div class="flex flex-wrap gap-2.5">
+        <a href="{{ route('admin.export.csv') }}" class="btn-outline text-xs px-4 py-2.5 rounded-lg flex items-center justify-center bg-white">
+            ↓ Export CSV
+        </a>
         <button onclick="document.getElementById('modal-add').classList.remove('hidden')"
-                class="btn-primary"
-                style="background:#3b82f6; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:500;">
+                class="btn-primary bg-blue-500 hover:bg-blue-600 text-white text-sm px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap">
             + Add New Member
         </button>
     </div>
 </div>
 
 {{-- Summary cards --}}
-<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     @php
         $totalActive  = $members->total();
         $presentCount = count(array_filter($todayEmails ?? []));
@@ -44,48 +45,62 @@
         ['Churches',      $churchCount,  '#6b21a8', '#f3e8ff'],
         ['Top Church',    $topChurch,    '#92400e', '#fef3c7'],
     ] as [$lbl, $val, $tc, $bg])
-    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
-        <p style="margin:0 0 6px; font-size:12px; color:#64748b; font-weight:500;">{{ $lbl }}</p>
-        <p style="margin:0; font-size:{{ is_numeric($val) ? '32' : '20' }}px; font-weight:700; color:#1e2937; line-height:1.2;">{{ $val }}</p>
+    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all hover:border-slate-300">
+        <p class="m-0 mb-1 text-xs text-slate-500 font-medium tracking-wide">{{ $lbl }}</p>
+        <p class="m-0 text-2xl lg:text-3xl font-bold text-slate-800 line-clamp-1 break-all" style="{{ !is_numeric($val) ? 'font-size: 1.25rem;' : '' }}">{{ $val }}</p>
     </div>
     @endforeach
 </div>
 
 {{-- Filters --}}
-<form method="GET" action="{{ route('admin.members.index') }}" style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-    <input type="text" name="search" placeholder="🔍 Search name or email…" value="{{ request('search') }}"
-        style="flex:2; min-width:200px; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:14px; background:white;">
+<form method="GET" action="{{ route('admin.members.index') }}" class="w-full flex flex-col md:flex-row gap-2.5 mb-6">
+    <div class="w-full md:flex-[2] min-w-0">
+        <input type="text" name="search" placeholder="🔍 Search name or email…" value="{{ request('search') }}"
+            class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+    </div>
 
-    <input type="text" name="cell" placeholder="Filter by cell…" value="{{ request('cell') }}"
-        style="flex:1; min-width:140px; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:14px; background:white;">
+    <div class="w-full md:flex-[1] min-w-0">
+        <input type="text" name="cell" placeholder="Filter by cell…" value="{{ request('cell') }}"
+            class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+    </div>
 
-    <select name="church" onchange="this.form.submit()"
-        style="flex:1; min-width:160px; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:14px; background:white;">
-        <option value="">All Churches</option>
-        @foreach($churches ?? [] as $c)
-        <option value="{{ $c }}" {{ request('church') === $c ? 'selected' : '' }}>{{ $c }}</option>
-        @endforeach
-    </select>
+    <div class="w-full md:flex-[1] min-w-0">
+        <select name="church" onchange="this.form.submit()"
+            class="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+            <option value="">All Churches</option>
+            @foreach($churches ?? [] as $c)
+            <option value="{{ $c }}" {{ request('church') === $c ? 'selected' : '' }}>{{ $c }}</option>
+            @endforeach
+        </select>
+    </div>
 
-    <input type="date" name="date_from" value="{{ request('date_from') }}"
-        style="border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:14px; background:white;">
+    <div class="grid grid-cols-2 gap-2 w-full md:w-auto">
+        <input type="date" name="date_from" value="{{ request('date_from') }}"
+            class="w-full border border-slate-200 rounded-lg px-3 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
 
-    <input type="date" name="date_to" value="{{ request('date_to') }}"
-        style="border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:14px; background:white;">
+        <input type="date" name="date_to" value="{{ request('date_to') }}"
+            class="w-full border border-slate-200 rounded-lg px-3 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+    </div>
 
-    <button type="submit" class="btn-primary" style="background:#2563eb; color:white; padding:12px 24px;">Search</button>
+    <div class="flex gap-2 w-full md:w-auto mt-1 md:mt-0">
+        <button type="submit" class="btn-primary flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-3 text-sm shadow-sm transition-colors text-center">
+            Search
+        </button>
 
-    @if(request()->hasAny(['search','cell','church','date_from','date_to']))
-        <a href="{{ route('admin.members.index') }}" class="btn-outline" style="padding:12px 20px;">Clear Filters</a>
-    @endif
+        @if(request()->hasAny(['search','cell','church','date_from','date_to']))
+            <a href="{{ route('admin.members.index') }}" class="btn-outline flex-1 md:flex-none text-center bg-white px-5 py-3 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                Clear
+            </a>
+        @endif
+    </div>
 </form>
 
-{{-- Table --}}
-<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+{{-- Table Container --}}
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="w-full overflow-x-auto scrollbar-thin">
+        <table class="w-full border-collapse min-w-[900px]">
             <thead>
-                <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                <tr class="bg-slate-50 border-b border-slate-200">
                     @php
                         $cols = [
                             ['',''],
@@ -100,67 +115,66 @@
                         ];
                     @endphp
                     @foreach($cols as [$key,$label])
-                    <th style="padding:14px 16px; text-align:left; font-size:12px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">
+                    <th class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                         @if($key)
                         <a href="{{ request()->fullUrlWithQuery(['sort'=>$key,'dir'=>($sortCol===$key&&$sortDir==='asc')?'desc':'asc']) }}"
-                           style="color:#64748b; text-decoration:none;">
-                            {{ $label }} @if($sortCol===$key) {{ $sortDir==='asc'?'↑':'↓' }} @endif
+                           class="text-slate-500 hover:text-slate-700 inline-flex items-center gap-1 transition-colors">
+                            {{ $label }} @if($sortCol===$key) <span>{{ $sortDir==='asc'?'↑':'↓' }}</span> @endif
                         </a>
                         @else {{ $label }} @endif
                     </th>
                     @endforeach
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
                 @forelse($members as $m)
                 @php
                     $idx      = $m->id % 8;
                     $present  = in_array(strtolower(trim($m->email)), $todayEmails ?? []);
                     $attCount = $memberAttCounts[$m->id] ?? 0;
                 @endphp
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:14px 16px;">
-                        <div style="width:38px; height:38px; border-radius:50%; background:{{ $bgs[$idx] }}; color:{{ $texts[$idx] }};
-                                    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="px-4 py-3.5 whitespace-nowrap w-12">
+                        <div class="w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center tracking-wider shadow-sm"
+                             style="background:{{ $bgs[$idx] }}; color:{{ $texts[$idx] }};">
                             {{ $m->initials ?? strtoupper(substr($m->first_name ?? '', 0, 1)) }}
                         </div>
                     </td>
-                    <td style="padding:14px 16px; font-weight:500; color:#334155;">{{ $m->title ?? '—' }}</td>
-                    <td style="padding:14px 16px;">
-                        <p style="margin:0; font-weight:600; color:#1e2937;">{{ $m->first_name }} {{ $m->last_name }}</p>
+                    <td class="px-4 py-3.5 font-medium text-slate-600 whitespace-nowrap">{{ $m->title ?? '—' }}</td>
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <p class="m-0 font-semibold text-slate-800">{{ $m->first_name }} {{ $m->last_name }}</p>
                     </td>
-                    <td style="padding:14px 16px;">
-                        <div style="font-size:13.5px; color:#334155;">{{ $m->email }}</div>
-                        <div style="font-size:12px; color:#64748b;">{{ $m->phone }}</div>
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <div class="text-sm text-slate-700 font-medium">{{ $m->email }}</div>
+                        <div class="text-xs text-slate-400 mt-0.5">{{ $m->phone }}</div>
                     </td>
-                    <td style="padding:14px 16px;">
-                        <span style="padding:4px 12px; border-radius:9999px; font-size:12.5px; background:#f1f5f9; color:#475569;">
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <span class="px-3 py-1 rounded-full text-xs bg-slate-100 text-slate-600 font-medium border border-slate-200/40">
                             {{ $m->cell ?? '—' }}
                         </span>
                     </td>
-                    <td style="padding:14px 16px; color:#475569;">{{ $m->church ?? '—' }}</td>
-                    <td style="padding:14px 16px; font-weight:600; color:#2563eb;">{{ $attCount }}×</td>
-                    <td style="padding:14px 16px;">
-                        <span style="padding:4px 12px; border-radius:9999px; font-size:12.5px; font-weight:500;
-                            background:{{ $present ? '#ecfdf5' : '#fef2f2' }};
-                            color:{{ $present ? '#166534' : '#991b1b' }};">
+                    <td class="px-4 py-3.5 text-slate-600 whitespace-nowrap font-medium">{{ $m->church ?? '—' }}</td>
+                    <td class="px-4 py-3.5 font-bold text-blue-600 whitespace-nowrap text-sm">{{ $attCount }}×</td>
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border"
+                              style="background:{{ $present ? '#ecfdf5' : '#fef2f2' }};
+                                     color:{{ $present ? '#166534' : '#991b1b' }};
+                                     border-color:{{ $present ? '#bbf7d0' : '#fecaca' }};">
                             {{ $present ? '✓ Present' : '✗ Absent' }}
                         </span>
                     </td>
-                    <td style="padding:14px 16px;">
-                        <div style="display:flex; gap:6px;">
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <div class="flex gap-2">
                             <button onclick="openEdit({{ $m->toJson() }})"
-                                    class="btn-outline btn-sm"
-                                    style="padding:6px 12px; border-radius:6px; font-size:13px;">
+                                    class="btn-outline px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                                 ✎ Edit
                             </button>
-                            <form method="POST" action="{{ route('admin.members.destroy', $m) }}" style="display:inline;" id="delete-form-{{ $m->id }}">
+                            <form method="POST" action="{{ route('admin.members.destroy', $m) }}" class="inline" id="delete-form-{{ $m->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button"
                                         onclick="confirmDelete({{ $m->id }}, '{{ $m->first_name }} {{ $m->last_name }}')"
-                                        class="btn-outline btn-sm"
-                                        style="padding:6px 12px; border-radius:6px; font-size:13px; color:#ef4444; border-color:#fecaca;">
+                                        class="btn-outline px-3 py-1.5 rounded-lg border text-xs font-medium text-red-600 bg-red-50/30 border-red-200 hover:bg-red-50/80 transition-all shadow-sm">
                                     🗑 Delete
                                 </button>
                             </form>
@@ -168,34 +182,42 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" style="padding:80px; text-align:center; color:#94a3b8;">No members found.</td></tr>
+                <tr>
+                    <td colspan="9" class="px-6 py-20 text-center text-slate-400 font-medium">
+                        No members found matched your directory parameters.
+                    </td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    {{-- Pagination --}}
-    <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0;">
-        <span style="color:#64748b;">{{ $members->total() }} members • Page {{ $members->currentPage() }} of {{ $members->lastPage() }}</span>
-        <div style="display:flex; gap:8px;">
+    {{-- Pagination UI --}}
+    <div class="px-6 py-4 flex flex-col sm:flex-row gap-4 justify-between items-center border-t border-slate-200 bg-slate-50/50">
+        <span class="text-sm text-slate-500 font-medium">{{ $members->total() }} members • Page {{ $members->currentPage() }} of {{ $members->lastPage() }}</span>
+        <div class="flex gap-2">
             @if($members->onFirstPage())
-                <span class="btn-outline btn-sm" style="opacity:0.4;">← Prev</span>
+                <span class="btn-outline text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200">← Prev</span>
             @else
-                <a href="{{ $members->previousPageUrl() }}" class="btn-outline btn-sm">← Prev</a>
+                <a href="{{ $members->previousPageUrl() }}" class="btn-outline text-xs px-3 py-1.5 rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors">← Prev</a>
             @endif
+
             @if($members->hasMorePages())
-                <a href="{{ $members->nextPageUrl() }}" class="btn-outline btn-sm">Next →</a>
+                <a href="{{ $members->nextPageUrl() }}" class="btn-outline text-xs px-3 py-1.5 rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors">Next →</a>
             @else
-                <span class="btn-outline btn-sm" style="opacity:0.4;">Next →</span>
+                <span class="btn-outline text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200">Next →</span>
             @endif
         </div>
     </div>
 </div>
 
 {{-- Add Member Modal --}}
-<div id="modal-add" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div style="background:#fff; border-radius:16px; padding:32px; width:560px; max-width:95vw; max-height:90vh; overflow-y:auto;" onclick="event.stopPropagation()">
-        <h2 style="margin:0 0 24px; font-size:26px; color:#1e2937; font-weight:600;">Add New Member</h2>
+<div id="modal-add" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl transition-all" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl md:text-2xl text-slate-800 font-semibold">Add New Member</h2>
+            <button onclick="closeModal('modal-add')" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">&times;</button>
+        </div>
         <form method="POST" action="{{ route('admin.members.store') }}">
             @csrf
             @include('admin._member_form')
@@ -204,9 +226,12 @@
 </div>
 
 {{-- Edit Member Modal --}}
-<div id="modal-edit" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div style="background:#fff; border-radius:16px; padding:32px; width:560px; max-width:95vw; max-height:90vh; overflow-y:auto;" onclick="event.stopPropagation()">
-        <h2 style="margin:0 0 24px; font-size:26px; color:#1e2937; font-weight:600;">Edit Member</h2>
+<div id="modal-edit" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl transition-all" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl md:text-2xl text-slate-800 font-semibold">Edit Member</h2>
+            <button onclick="closeModal('modal-edit')" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">&times;</button>
+        </div>
         <form method="POST" id="edit-form" action="">
             @csrf @method('PUT')
             @include('admin._member_form', ['editing' => true])
@@ -215,19 +240,17 @@
 </div>
 
 {{-- Delete Confirmation Modal --}}
-<div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-    <div style="background:#fff; border-radius:16px; padding:32px; width:400px; max-width:95vw;" onclick="event.stopPropagation()">
-        <h3 style="margin:0 0 16px; color:#1e2937; font-size:20px;">Delete Member?</h3>
-        <p id="delete-member-name" style="margin:0 0 24px; color:#475569; font-size:15px;"></p>
-        <div style="display:flex; gap:12px; justify-content:flex-end;">
+<div id="delete-confirm-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl transition-all" onclick="event.stopPropagation()">
+        <h3 class="font-semibold text-slate-800 text-lg md:text-xl mb-2">Delete Member?</h3>
+        <p id="delete-member-name" class="m-0 mb-6 text-slate-500 text-sm leading-relaxed"></p>
+        <div class="flex gap-3 justify-end">
             <button onclick="closeDeleteModal()"
-                style="padding:10px 22px; border:1.5px solid #BFDBFE; border-radius:8px; background:#fff; color:#1E40AF; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer;"
-                onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">
+                class="px-4 py-2.5 border border-blue-200 rounded-lg bg-white text-blue-700 text-sm font-medium hover:bg-blue-50/50 transition-colors cursor-pointer">
                 Cancel
             </button>
             <button onclick="executeDelete()"
-                style="padding:10px 24px; border:none; border-radius:8px; background:#ef4444; color:white; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(239,68,68,.3);"
-                onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                class="px-4 py-2.5 border-none rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors cursor-pointer shadow-md shadow-red-500/20">
                 Yes, Delete
             </button>
         </div>
@@ -254,7 +277,7 @@ function openEdit(member) {
 
 function confirmDelete(id, name) {
     currentDeleteUrl = `/admin/members/${id}`;
-    document.getElementById('delete-member-name').textContent = `Are you sure you want to delete ${name}?`;
+    document.getElementById('delete-member-name').textContent = `Are you sure you want to permanently delete ${name}? This operational step cannot be reversed.`;
     document.getElementById('delete-confirm-modal').classList.remove('hidden');
 }
 
