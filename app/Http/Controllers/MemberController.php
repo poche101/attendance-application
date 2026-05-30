@@ -29,7 +29,6 @@ class MemberController extends Controller
             $query->where('church', $church);
         }
 
-        // Filter by attendance date range
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
         if ($dateFrom || $dateTo) {
@@ -39,7 +38,6 @@ class MemberController extends Controller
             });
         }
 
-        // Fetch today's attendance records
         $todayAttendance = Attendance::whereDate('attendance_date', now()->toDateString())->get();
         $todayMemberIds  = $todayAttendance->pluck('member_id')->filter()->toArray();
         $todayEmails     = $todayAttendance->pluck('email')
@@ -47,30 +45,20 @@ class MemberController extends Controller
             ->filter()
             ->toArray();
 
-        // Status filter
         if ($request->get('status') === 'present') {
             if (empty($todayMemberIds) && empty($todayEmails)) {
                 $query->whereRaw('1 = 0');
             } else {
                 $query->where(function ($q) use ($todayMemberIds, $todayEmails) {
-                    if (!empty($todayMemberIds)) {
-                        $q->whereIn('id', $todayMemberIds);
-                    }
-                    if (!empty($todayEmails)) {
-                        $q->orWhereIn(DB::raw('LOWER(email)'), $todayEmails);
-                    }
+                    if (!empty($todayMemberIds)) $q->whereIn('id', $todayMemberIds);
+                    if (!empty($todayEmails))    $q->orWhereIn(DB::raw('LOWER(email)'), $todayEmails);
                 });
             }
         } elseif ($request->get('status') === 'absent') {
-            if (!empty($todayMemberIds)) {
-                $query->whereNotIn('id', $todayMemberIds);
-            }
-            if (!empty($todayEmails)) {
-                $query->whereNotIn(DB::raw('LOWER(email)'), $todayEmails);
-            }
+            if (!empty($todayMemberIds)) $query->whereNotIn('id', $todayMemberIds);
+            if (!empty($todayEmails))    $query->whereNotIn(DB::raw('LOWER(email)'), $todayEmails);
         }
 
-        // Sorting — include title now
         $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'email', 'cell', 'church'])
             ? $request->get('sort') : 'first_name';
         $sortDir = $request->get('dir') === 'desc' ? 'desc' : 'asc';
@@ -78,7 +66,6 @@ class MemberController extends Controller
 
         $members = $query->paginate(8)->withQueryString();
 
-        // Attendance counts for displayed members
         $memberIds    = $members->pluck('id')->filter()->toArray();
         $memberEmails = $members->pluck('email')->map(fn($e) => strtolower(trim($e)))->toArray();
 
@@ -107,6 +94,9 @@ class MemberController extends Controller
         ));
     }
 
+    /**
+     * Admin panel: add a new member (active immediately).
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -115,12 +105,47 @@ class MemberController extends Controller
             'last_name'  => 'required|string|max:100',
             'email'      => 'required|email|unique:members,email',
             'phone'      => 'nullable|string|max:30',
+            'group'      => 'nullable|string|max:150',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
+            'birthday'   => 'nullable|date',
         ]);
 
-        Member::create($data + ['is_active' => true]);
+        $data['email']     = strtolower(trim($data['email']));
+        $data['is_active'] = true;
+
+        Member::create($data);
+
         return back()->with('toast', 'Member added successfully.');
+    }
+
+    /**
+     * Public check-in self-registration.
+     * On failure: redirect back to checkin with errors + re-flash attempted_email.
+     * On success: redirect to checkin with status=registered.
+     */
+    public function publicStore(Request $request)
+    {
+        $validated = $request->validate([
+            'title'      => 'nullable|string|max:50',
+            'first_name' => 'required|string|max:100',
+            'last_name'  => 'required|string|max:100',
+            'email'      => 'required|email|unique:members,email',
+            'phone'      => 'nullable|string|max:30',
+            'group'      => 'nullable|string|max:150',
+            'church'     => 'nullable|string|max:150',
+            'cell'       => 'nullable|string|max:150',
+            'birthday'   => 'nullable|date',
+        ]);
+
+        // Validation passed — save and redirect with success status
+        $validated['email']     = strtolower(trim($validated['email']));
+        $validated['is_active'] = false; // pending admin approval
+
+        Member::create($validated);
+
+        return redirect()->route('checkin')
+            ->with('status', 'registered');
     }
 
     public function update(Request $request, Member $member)
@@ -131,11 +156,15 @@ class MemberController extends Controller
             'last_name'  => 'required|string|max:100',
             'email'      => 'required|email|unique:members,email,' . $member->id,
             'phone'      => 'nullable|string|max:30',
+            'group'      => 'nullable|string|max:150',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
+            'birthday'   => 'nullable|date',
         ]);
 
+        $data['email'] = strtolower(trim($data['email']));
         $member->update($data);
+
         return back()->with('toast', 'Member updated.');
     }
 

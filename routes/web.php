@@ -16,6 +16,7 @@ use App\Http\Controllers\AuthController;
 Route::get('/', [AttendanceController::class, 'index'])->name('checkin');
 Route::post('/checkin', [AttendanceController::class, 'store'])->name('checkin.store');
 
+Route::post('/register', [MemberController::class, 'publicStore'])->name('members.store');
 // Admin Authentication Gateway
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/admin/login', [AuthController::class, 'login'])->name('login.post');

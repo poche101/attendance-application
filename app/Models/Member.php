@@ -13,8 +13,10 @@ class Member extends Model
         'last_name',
         'email',
         'phone',
+        'group',
         'church',
         'cell',
+        'birthday',
         'is_active',
     ];
 
