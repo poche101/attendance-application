@@ -93,11 +93,6 @@
 
 @yield('content')
 
-{{-- Footer --}}
-<footer class="bg-white border-t border-slate-200 py-4 sm:py-5 text-center text-xs text-slate-500 px-4">
-    Grace Attendance System © {{ date('Y') }} · All Rights Reserved
-</footer>
-
 @stack('scripts')
 </body>
 </html>
