@@ -822,7 +822,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
         {{-- Church --}}
         <div class="reg-field full">
-          <label class="reg-label" for="reg_church">Church</label>
+          <label class="reg-label" for="reg_church">Church/Fellowship</label>
           <input type="text" name="church" id="reg_church"
             value="{{ old('church') }}" placeholder="e.g. CE Lekki"
             class="reg-input">
