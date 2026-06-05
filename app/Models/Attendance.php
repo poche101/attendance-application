@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    protected $fillable = ['member_id', 'email', 'attendance_date', 'submitted_at'];
+    protected $fillable = [
+        'member_id',
+        'phone',
+        'attendance_date',
+        'submitted_at',
+    ];
 
-    protected $casts = ['attendance_date' => 'date', 'submitted_at' => 'datetime'];
+    protected $casts = [
+        'attendance_date' => 'date',
+        'submitted_at'    => 'datetime',
+    ];
 
     public function member(): BelongsTo
     {

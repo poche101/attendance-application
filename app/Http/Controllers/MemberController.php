@@ -5,10 +5,31 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
+    /**
+     * Normalize a phone number to a consistent format.
+     * Strips all non-digit characters, then re-prefixes with 0.
+     * e.g. "08012345678", "8012345678", "+2348012345678" → "08012345678"
+     */
+    private function normalizePhone(string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', $phone);
+
+        // Strip country code prefix (234 for Nigeria, extend as needed)
+        if (str_starts_with($digits, '234') && strlen($digits) > 10) {
+            $digits = substr($digits, 3);
+        }
+
+        // Ensure leading zero
+        if (!str_starts_with($digits, '0')) {
+            $digits = '0' . $digits;
+        }
+
+        return $digits;
+    }
+
     public function index(Request $request)
     {
         $query = Member::query();
@@ -17,7 +38,7 @@ class MemberController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%$search%")
                   ->orWhere('last_name',  'like', "%$search%")
-                  ->orWhere('email',      'like', "%$search%");
+                  ->orWhere('phone',      'like', "%$search%");
             });
         }
 
@@ -38,59 +59,42 @@ class MemberController extends Controller
             });
         }
 
-        $todayAttendance = Attendance::whereDate('attendance_date', now()->toDateString())->get();
-        $todayMemberIds  = $todayAttendance->pluck('member_id')->filter()->toArray();
-        $todayEmails     = $todayAttendance->pluck('email')
-            ->map(fn($e) => strtolower(trim($e)))
+        $todayMemberIds = Attendance::whereDate('attendance_date', now()->toDateString())
+            ->pluck('member_id')
             ->filter()
             ->toArray();
 
         if ($request->get('status') === 'present') {
-            if (empty($todayMemberIds) && empty($todayEmails)) {
+            if (empty($todayMemberIds)) {
                 $query->whereRaw('1 = 0');
             } else {
-                $query->where(function ($q) use ($todayMemberIds, $todayEmails) {
-                    if (!empty($todayMemberIds)) $q->whereIn('id', $todayMemberIds);
-                    if (!empty($todayEmails))    $q->orWhereIn(DB::raw('LOWER(email)'), $todayEmails);
-                });
+                $query->whereIn('id', $todayMemberIds);
             }
         } elseif ($request->get('status') === 'absent') {
-            if (!empty($todayMemberIds)) $query->whereNotIn('id', $todayMemberIds);
-            if (!empty($todayEmails))    $query->whereNotIn(DB::raw('LOWER(email)'), $todayEmails);
+            if (!empty($todayMemberIds)) {
+                $query->whereNotIn('id', $todayMemberIds);
+            }
         }
 
-        $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'email', 'cell', 'church'])
+        $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'phone', 'cell', 'church'])
             ? $request->get('sort') : 'first_name';
         $sortDir = $request->get('dir') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortCol, $sortDir);
 
         $members = $query->paginate(8)->withQueryString();
 
-        $memberIds    = $members->pluck('id')->filter()->toArray();
-        $memberEmails = $members->pluck('email')->map(fn($e) => strtolower(trim($e)))->toArray();
+        $memberIds = $members->pluck('id')->filter()->toArray();
 
-        $memberAttCounts = Attendance::where(function ($q) use ($memberIds, $memberEmails) {
-                if (!empty($memberIds))    $q->whereIn('member_id', $memberIds);
-                if (!empty($memberEmails)) $q->orWhereIn(DB::raw('LOWER(email)'), $memberEmails);
-            })
-            ->selectRaw('member_id, LOWER(email) as email_lower, COUNT(*) as cnt')
-            ->groupBy('member_id', 'email_lower')
-            ->get()
-            ->reduce(function ($carry, $item) use ($members) {
-                $match = $members->first(fn($m) =>
-                    ($item->member_id && $m->id == $item->member_id) ||
-                    strtolower(trim($m->email)) === $item->email_lower
-                );
-                if ($match) {
-                    $carry[$match->id] = ($carry[$match->id] ?? 0) + $item->cnt;
-                }
-                return $carry;
-            }, []);
+        $memberAttCounts = Attendance::whereIn('member_id', $memberIds)
+            ->selectRaw('member_id, COUNT(*) as cnt')
+            ->groupBy('member_id')
+            ->pluck('cnt', 'member_id')
+            ->toArray();
 
         $churches = Member::distinct()->pluck('church')->filter()->sort()->values();
 
         return view('admin.members', compact(
-            'members', 'todayEmails', 'churches', 'sortCol', 'sortDir', 'memberAttCounts'
+            'members', 'todayMemberIds', 'churches', 'sortCol', 'sortDir', 'memberAttCounts'
         ));
     }
 
@@ -103,15 +107,14 @@ class MemberController extends Controller
             'title'      => 'nullable|string|max:50',
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
-            'email'      => 'required|email|unique:members,email',
-            'phone'      => 'nullable|string|max:30',
+            'phone'      => 'required|string|max:30|unique:members,phone',
             'group'      => 'nullable|string|max:150',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
             'birthday'   => 'nullable|date',
         ]);
 
-        $data['email']     = strtolower(trim($data['email']));
+        $data['phone']     = $this->normalizePhone($data['phone']);
         $data['is_active'] = true;
 
         Member::create($data);
@@ -121,25 +124,19 @@ class MemberController extends Controller
 
     /**
      * Public check-in self-registration.
-     * On failure: redirect back to checkin with errors + re-flash attempted_email.
+     * On failure: redirect back to checkin with errors + re-flash attempted_phone.
      * On success: redirect to checkin with status=registered.
      */
     public function publicStore(Request $request)
     {
         $validated = $request->validate([
-            'title'      => 'nullable|string|max:50',
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
-            'email'      => 'required|email|unique:members,email',
-            'phone'      => 'nullable|string|max:30',
-            'group'      => 'nullable|string|max:150',
+            'phone'      => 'required|string|max:30|unique:members,phone',
             'church'     => 'nullable|string|max:150',
-            'cell'       => 'nullable|string|max:150',
-            'birthday'   => 'nullable|date',
         ]);
 
-        // Validation passed — save and redirect with success status
-        $validated['email']     = strtolower(trim($validated['email']));
+        $validated['phone']     = $this->normalizePhone($validated['phone']);
         $validated['is_active'] = false; // pending admin approval
 
         Member::create($validated);
@@ -154,15 +151,14 @@ class MemberController extends Controller
             'title'      => 'nullable|string|max:50',
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
-            'email'      => 'required|email|unique:members,email,' . $member->id,
-            'phone'      => 'nullable|string|max:30',
+            'phone'      => 'required|string|max:30|unique:members,phone,' . $member->id,
             'group'      => 'nullable|string|max:150',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
             'birthday'   => 'nullable|date',
         ]);
 
-        $data['email'] = strtolower(trim($data['email']));
+        $data['phone'] = $this->normalizePhone($data['phone']);
         $member->update($data);
 
         return back()->with('toast', 'Member updated.');

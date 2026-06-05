@@ -14,27 +14,37 @@ class AttendanceController extends Controller
         return view('public.checkin');
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate([
+            'phone' => 'required|string|max:20',
+        ]);
 
-        $email = strtolower(trim($request->input('email')));
+        // Normalize: strip non-digits, handle country code, ensure leading 0
+        $raw    = trim($request->input('phone'));
+        $digits = preg_replace('/\D/', '', $raw);
+        if (str_starts_with($digits, '234') && strlen($digits) > 10) {
+            $digits = substr($digits, 3);
+        }
+        if (!str_starts_with($digits, '0')) {
+            $digits = '0' . $digits;
+        }
+        $phone = $digits;
+
         $today = now()->toDateString();
 
-        // 1. Look up member strictly by email first
-        $member = Member::where('email', $email)->first();
+        // 1. Look up member by phone number
+        $member = Member::where('phone', $phone)->first();
 
         // 2. Member entirely missing — send them to register
         if (!$member) {
             return back()
                 ->with('status', 'not_found')
-                ->with('attempted_email', $email);
+                ->with('attempted_phone', $phone);
         }
 
-        // PENDING SCREEN REMOVED: Status check bypassed completely.
-
-        // 3. STRICT DUPLICATE CHECK — Ensure they can only check in ONCE per day
-        $alreadyMarked = Attendance::where('email', $email)
+        // 3. Strict duplicate check — only one check-in per day
+        $alreadyMarked = Attendance::where('member_id', $member->id)
             ->whereDate('attendance_date', $today)
             ->exists();
 
@@ -48,7 +58,7 @@ class AttendanceController extends Controller
         try {
             Attendance::create([
                 'member_id'       => $member->id,
-                'email'           => $email,
+                'phone'           => $phone,
                 'attendance_date' => $today,
                 'submitted_at'    => now(),
             ]);

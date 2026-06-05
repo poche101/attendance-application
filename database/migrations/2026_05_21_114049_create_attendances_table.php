@@ -6,27 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // Safety drop to clear out any leftover table causing conflicts
         Schema::dropIfExists('attendances');
 
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('member_id')->constrained()->onDelete('cascade'); // Assumes you have a members table
-            $table->string('email')->nullable();
-            $table->date('attendance_date');
-            $table->dateTime('submitted_at');
+            $table->foreignId('member_id')->constrained('members')->onDelete('cascade');
+            $table->string('phone', 30)->nullable();
+            $table->date('attendance_date')->index();
+            $table->timestamp('submitted_at')->nullable()->useCurrent();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('attendances');

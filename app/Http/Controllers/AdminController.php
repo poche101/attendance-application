@@ -83,17 +83,16 @@ class AdminController extends Controller
 
         $callback = function () use ($records) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['First Name','Last Name','Email','Phone','Group','Church','Cell','Birthday','Status','Service','Date']);
+            fputcsv($handle, ['First Name', 'Last Name', 'Phone', 'Group', 'Church', 'Cell', 'Birthday', 'Status', 'Service', 'Date']);
             foreach ($records as $a) {
                 $m = $a->member;
                 fputcsv($handle, [
                     $m?->first_name ?? '',
                     $m?->last_name  ?? '',
-                    $a->email,
-                    $m?->phone   ?? '',
-                    $m?->group   ?? '',
-                    $m?->church  ?? '',
-                    $m?->cell    ?? '',
+                    $m?->phone      ?? $a->phone ?? '',
+                    $m?->group      ?? '',
+                    $m?->church     ?? '',
+                    $m?->cell       ?? '',
                     $m?->birthday?->format('Y-m-d') ?? '',
                     'Present',
                     'Sunday Service',

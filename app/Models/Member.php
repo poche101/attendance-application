@@ -11,8 +11,8 @@ class Member extends Model
         'title',
         'first_name',
         'last_name',
-        'email',
         'phone',
+        'email',
         'group',
         'church',
         'cell',
@@ -53,7 +53,7 @@ class Member extends Model
     }
 
     /**
-     * Full name helper.
+     * Full name helper (includes title if present).
      */
     public function getFullNameAttribute(): string
     {
