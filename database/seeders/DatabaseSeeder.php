@@ -34,12 +34,13 @@ class DatabaseSeeder extends Seeder
         $lines = file($csvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         array_shift($lines); // Remove header
 
-        $count = 0;
+        $count    = 0;
+        $skipped  = 0;
+        $seenPhones = [];
 
         foreach ($lines as $line) {
-            // Remove outer quotes and parse
             $line = trim($line, '"');
-            $row = str_getcsv($line, ",", "\"", "\\");
+            $row  = str_getcsv($line, ",", "\"", "\\");
 
             if (count($row) < 7) {
                 continue;
@@ -52,13 +53,37 @@ class DatabaseSeeder extends Seeder
 
             $phone = $this->cleanPhone($row[5] ?? '');
 
+            // If phone is non-empty but already seen in this CSV run,
+            // null it out so we don't hit the unique constraint.
+            // Two members can't share a phone — let email be the identifier.
+            if (!empty($phone)) {
+                if (isset($seenPhones[$phone])) {
+                    $this->command->warn("⚠️  Duplicate phone {$phone} for {$email} — saving without phone.");
+                    $phone = null;
+                    $skipped++;
+                } else {
+                    // Also check if it already exists in the DB for a different email
+                    $existingByPhone = Member::where('phone', $phone)
+                        ->where('email', '!=', $email)
+                        ->exists();
+
+                    if ($existingByPhone) {
+                        $this->command->warn("⚠️  Phone {$phone} belongs to another member — saving {$email} without phone.");
+                        $phone = null;
+                        $skipped++;
+                    } else {
+                        $seenPhones[$phone] = true;
+                    }
+                }
+            }
+
             $memberData = [
                 'title'      => trim($row[0] ?? ''),
                 'first_name' => trim($row[1] ?? ''),
                 'last_name'  => trim($row[2] ?? ''),
                 'church'     => trim($row[3] ?? 'Lekki'),
                 'cell'       => trim($row[4] ?? ''),
-                'phone'      => $phone,
+                'phone'      => $phone ?: null,
                 'email'      => $email,
                 'is_active'  => true,
             ];
@@ -74,6 +99,10 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info("🎉 Successfully seeded {$count} members!");
 
+        if ($skipped > 0) {
+            $this->command->warn("⚠️  {$skipped} members had duplicate phones and were saved without a phone number.");
+        }
+
         $this->seedSampleAttendance();
     }
 
@@ -82,14 +111,23 @@ class DatabaseSeeder extends Seeder
         $phone = trim($phone);
         if (empty($phone)) return '';
 
+        // Handle scientific notation (e.g. 8.1E+9)
         if (stripos($phone, 'E') !== false) {
             $phone = (string) (int) floatval($phone);
         }
 
-        $phone = preg_replace('/[^0-9+]/', '', $phone);
+        // Strip non-numeric characters except leading +
+        $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        if (strlen($phone) === 11 && str_starts_with($phone, '0')) {
-            $phone = '234' . substr($phone, 1);
+        if (empty($phone)) return '';
+
+        // Normalise: strip country code 234, ensure leading 0
+        if (str_starts_with($phone, '234') && strlen($phone) > 10) {
+            $phone = '0' . substr($phone, 3);
+        }
+
+        if (!str_starts_with($phone, '0')) {
+            $phone = '0' . $phone;
         }
 
         return $phone;
@@ -97,7 +135,7 @@ class DatabaseSeeder extends Seeder
 
     private function seedSampleAttendance(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today   = Carbon::today()->toDateString();
         $samples = ['seyitade@yahoo.com', 'oluwadarelord@yahoo.com', 'esosaking@gmail.com'];
 
         foreach ($samples as $email) {

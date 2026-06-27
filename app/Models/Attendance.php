@@ -10,6 +10,7 @@ class Attendance extends Model
     protected $fillable = [
         'member_id',
         'phone',
+        'email',
         'attendance_date',
         'submitted_at',
     ];

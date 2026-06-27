@@ -26,9 +26,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { font-size: 16px; }
-
 body {
   font-family: var(--font-body);
   background: var(--paper);
@@ -135,10 +133,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   color: var(--white);
   margin-bottom: 14px;
 }
-.hero-title em {
-  font-style: italic;
-  color: var(--accent-2);
-}
+.hero-title em { font-style: italic; color: var(--accent-2); }
 .hero-sub {
   font-size: .88rem;
   line-height: 1.65;
@@ -146,52 +141,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   max-width: 300px;
   margin-bottom: 32px;
 }
-.hero-stats {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-}
-.hero-stat {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 12px;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-width: 80px;
-  flex: 1 1 80px;
-  max-width: 120px;
-}
-.hero-stat-value {
-  font-family: var(--font-head);
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--white);
-  letter-spacing: -.02em;
-  line-height: 1;
-}
-.hero-stat-label {
-  font-size: .6rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.45);
-  text-align: center;
-}
-.hero-wave {
-  display: block;
-  width: 100%;
-  margin-top: -1px;
-  line-height: 0;
-}
-.hero-wave svg {
-  display: block;
-  width: 100%;
-}
+.hero-wave { display: block; width: 100%; margin-top: -1px; line-height: 0; }
+.hero-wave svg { display: block; width: 100%; }
 
 /* ── Main ── */
 .checkin-main {
@@ -201,10 +152,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   align-items: center;
   padding: 32px 16px 48px;
 }
-.checkin-card-wrap {
-  width: 100%;
-  max-width: var(--max-w);
-}
+.checkin-card-wrap { width: 100%; max-width: var(--max-w); }
 
 /* ── State cards ── */
 .state-card {
@@ -263,6 +211,74 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
 .state-btn:hover  { background: #1e3a8a; box-shadow: 0 6px 24px rgba(30,64,175,.42); }
 .state-btn:active { transform: scale(.97); }
+
+/* ── Not-found action group ── */
+.not-found-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+  align-items: center;
+}
+.not-found-actions .state-btn { margin-top: 0; }
+
+.action-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+}
+.action-divider::before,
+.action-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.phone-alt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: .86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+  text-decoration: none;
+}
+.phone-alt-btn:hover {
+  border-color: var(--accent-2);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.register-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: .82rem;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: var(--font-body);
+}
+.register-link:hover { color: #1e3a8a; }
+
 .btn-outline-terracotta {
   display: inline-block;
   padding: 10px 28px;
@@ -277,20 +293,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   text-decoration: none;
 }
 .btn-outline-terracotta:hover { background: var(--accent); color: #fff; }
-.register-link {
-  display: inline-block;
-  margin-top: 12px;
-  font-size: .82rem;
-  color: var(--accent);
-  font-weight: 600;
-  cursor: pointer;
-  background: none;
-  border: none;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  font-family: var(--font-body);
-}
-.register-link:hover { color: #1e3a8a; }
 
 /* ── Check-in form card ── */
 .form-card {
@@ -350,6 +352,50 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .submit-btn:hover  { background: #1e3a8a; box-shadow: 0 6px 26px rgba(30,64,175,.44); }
 .submit-btn:active { transform: scale(.98); }
 
+/* ── Divider with text ── */
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 4px;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+}
+.or-divider::before,
+.or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Phone modal trigger link ── */
+.phone-link {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  background: transparent;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+  text-align: center;
+  letter-spacing: .01em;
+}
+.phone-link:hover {
+  border-color: var(--accent-2);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.phone-link svg { vertical-align: middle; margin-right: 6px; }
+
 .checkin-hint {
   margin-top: 20px;
   font-size: .75rem;
@@ -392,8 +438,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .toast.toast-error   { background: #991b1b; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-/* ── Registration Modal ── */
-.reg-modal-backdrop {
+/* ── Shared Modal Base ── */
+.modal-backdrop {
   display: none;
   position: fixed;
   inset: 0;
@@ -402,9 +448,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   align-items: flex-end;
   justify-content: center;
 }
-.reg-modal-backdrop.open { display: flex; }
-
-.reg-modal-sheet {
+.modal-backdrop.open { display: flex; }
+.modal-sheet {
   background: var(--white);
   border-radius: 24px 24px 0 0;
   width: 100%;
@@ -417,8 +462,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
 @keyframes sdin  { from { transform:translateY(100%); } to { transform:translateY(0); } }
 @keyframes sdout { from { transform:translateY(0); } to { transform:translateY(100%); } }
-.reg-modal-sheet.closing { animation: sdout .22s ease both; }
-
+.modal-sheet.closing { animation: sdout .22s ease both; }
 .modal-handle {
   width: 40px; height: 4px;
   background: var(--border);
@@ -439,40 +483,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   margin-bottom: 22px;
   line-height: 1.5;
 }
-
-.reg-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.reg-field { display: flex; flex-direction: column; gap: 5px; }
-.reg-field.full { grid-column: 1 / -1; }
-.reg-label {
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.reg-label .req { color: #ef4444; }
-.reg-input {
-  width: 100%;
-  border: 1.5px solid #bfdbfe;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: .92rem;
-  background: #f8faff;
-  color: var(--ink);
-  font-family: var(--font-body);
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.reg-input:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
-.reg-input.is-invalid { border-color: #fca5a5; background: #fff5f5; }
-.reg-error { font-size: .72rem; color: #991b1b; font-weight: 500; margin-top: 2px; }
-
 .modal-divider { border-top: 1.5px solid var(--border); margin: 22px 0 18px; }
 .modal-btn-row {
   display: flex;
@@ -526,73 +536,87 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Responsive breakpoints ── */
+/* ── Reg grid ── */
+.reg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.reg-field { display: flex; flex-direction: column; gap: 5px; }
+.reg-field.full { grid-column: 1 / -1; }
+.reg-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.reg-label .req { color: #ef4444; }
+.reg-input {
+  width: 100%;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: .92rem;
+  background: #f8faff;
+  color: var(--ink);
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.reg-input:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.reg-input.is-invalid { border-color: #fca5a5; background: #fff5f5; }
+.reg-error { font-size: .72rem; color: #991b1b; font-weight: 500; margin-top: 2px; }
 
-/* Large screens */
+/* ── Phone modal ── */
+.phone-modal-field { margin-bottom: 4px; }
+
+/* ── Responsive ── */
 @media (min-width: 768px) {
   .checkin-topbar { padding: 16px 40px; }
   .topbar-title { font-size: 1.1rem; }
-
   .checkin-hero { padding: 0 40px 0; }
   .hero-inner { padding: 56px 0 60px; }
-
   .checkin-main { padding: 40px 24px 64px; }
-
   .form-card { padding: 36px 32px; }
   .state-card { padding: 44px 36px; }
-
-  .reg-modal-sheet { padding: 28px 32px 48px; }
-  .reg-modal-backdrop { align-items: center; padding: 24px; }
-  .reg-modal-sheet { border-radius: 20px; max-height: 85vh; }
-
-  .hero-stat { padding: 14px 20px; min-width: 100px; }
-  .hero-stat-value { font-size: 1.4rem; }
+  .modal-sheet { padding: 28px 32px 48px; }
+  .modal-backdrop { align-items: center; padding: 24px; }
+  .modal-sheet { border-radius: 20px; max-height: 85vh; }
 }
-
-/* Extra large / desktop */
 @media (min-width: 1024px) {
   .checkin-topbar { padding: 18px 60px; }
   .checkin-hero { padding: 0 60px 0; }
   .checkin-main { padding: 48px 24px 80px; }
-
   .hero-title { font-size: 3rem; }
   .hero-sub { font-size: .95rem; max-width: 340px; }
 }
-
-/* Small phones */
 @media (max-width: 360px) {
   .checkin-topbar { padding: 12px 16px; }
   .topbar-title { font-size: .88rem; }
   .topbar-date { font-size: .6rem; padding: 3px 8px; }
-
   .checkin-hero { padding: 0 16px 0; }
   .hero-inner { padding: 28px 0 32px; }
   .hero-title { font-size: 1.65rem; }
   .hero-sub { font-size: .82rem; }
-  .hero-stat { padding: 10px 12px; min-width: 72px; }
-  .hero-stat-value { font-size: 1.05rem; }
-
   .checkin-main { padding: 20px 12px 40px; }
   .form-card { padding: 22px 16px; }
   .state-card { padding: 28px 16px; }
-
   .state-icon-wrap { width: 76px; height: 76px; }
   .state-heading { font-size: 1.2rem; }
-
   .modal-btn-row { flex-direction: column-reverse; }
-  .modal-btn-cancel,
-  .modal-btn-save { width: 100%; justify-content: center; }
+  .modal-btn-cancel, .modal-btn-save { width: 100%; justify-content: center; }
+  .reg-grid { grid-template-columns: 1fr; }
+  .not-found-actions .state-btn { width: 100%; text-align: center; }
+  .phone-alt-btn { width: 100%; }
 }
-
-/* Ensure tap targets are comfortably large on touch devices */
 @media (hover: none) and (pointer: coarse) {
   .submit-btn { padding: 16px; }
-  .state-btn,
-  .btn-outline-terracotta { padding: 13px 32px; }
-  .field-input,
-  .reg-input { padding: 14px; }
-  .modal-btn-cancel,
-  .modal-btn-save { padding: 13px 22px; }
+  .state-btn, .btn-outline-terracotta { padding: 13px 32px; }
+  .field-input, .reg-input { padding: 14px; }
+  .modal-btn-cancel, .modal-btn-save { padding: 13px 22px; }
 }
 </style>
 @endpush
@@ -614,7 +638,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
       <h1 class="hero-title">Welcome to<br><em>Church</em></h1>
       <p class="hero-sub">Check in below to record your attendance for today's Sunday service.</p>
     </div>
-    {{-- Wave transition into page background --}}
     <div class="hero-wave" aria-hidden="true">
       <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         <path d="M0 48 C360 0 1080 0 1440 48 L1440 48 L0 48 Z" fill="#f8fafc"/>
@@ -697,16 +720,35 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
               <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </div>
-          <h2 class="state-heading">Number Not Found</h2>
+          <h2 class="state-heading">Email Not Found</h2>
           <p class="state-body">
-            We couldn't find <strong style="color:var(--ink);">{{ session('attempted_phone') }}</strong> in our records.<br>
-            Not registered yet?
+            We couldn't find <strong style="color:var(--ink);">{{ session('attempted_email') }}</strong> in our records.
           </p>
-          <a href="{{ route('checkin') }}" class="state-btn">Try Again →</a>
-          <br>
-          <button type="button" class="register-link" onclick="openRegModal()">
-            <span style="font-size: 18px">Register as a new member →</span>
-          </button>
+
+          <div class="not-found-actions">
+
+            {{-- Try again --}}
+            <a href="{{ route('checkin') }}" class="state-btn">Try Again →</a>
+
+            <div class="action-divider">or check in another way</div>
+
+            {{-- Phone number fallback --}}
+            <button type="button" class="phone-alt-btn" onclick="openPhoneModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              Use my phone number instead
+            </button>
+
+            <div class="action-divider">not registered yet?</div>
+
+            {{-- Register --}}
+            <button type="button" class="register-link" onclick="openRegModal()">
+              Register as a new member →
+            </button>
+
+          </div>
         </div>
 
       @elseif(session('status') === 'registered')
@@ -729,34 +771,45 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         </div>
 
       @else
+        {{-- ── PRIMARY FORM: Email check-in ── --}}
         <div class="form-card">
           <form method="POST" action="{{ route('checkin.store') }}">
             @csrf
-            <label for="phone" class="field-label">Your Phone Number</label>
+            <label for="email" class="field-label">Your Email Address</label>
             <input
-              type="tel"
-              id="phone"
-              name="phone"
-              placeholder="e.g. 08012345678"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="e.g. john.doe@example.com"
               class="field-input"
-              value="{{ old('phone') }}"
+              value="{{ old('email') }}"
               required
-              autocomplete="tel"
+              autocomplete="email"
               aria-required="true"
-              inputmode="tel"
+              inputmode="email"
             />
-            @error('phone')
+            @error('email')
               <p class="error-msg" role="alert">{{ $message }}</p>
             @enderror
             <button type="submit" class="submit-btn">
               Mark My Attendance <span aria-hidden="true">→</span>
             </button>
           </form>
+
+          <div class="or-divider">or</div>
+
+          <button type="button" class="phone-link" onclick="openPhoneModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            Check in with phone number instead
+          </button>
         </div>
       @endif
 
       <p class="checkin-hint">
-        If your number isn't recognised, you can register below or speak with an administrator.
+        If your details aren't recognised, you can register below or speak with an administrator.
       </p>
     </div>
   </main>
@@ -769,9 +822,50 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 {{-- ═══ TOAST ═══ --}}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+{{-- ═══ PHONE CHECK-IN MODAL ═══ --}}
+<div class="modal-backdrop" id="phoneModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="phoneModalTitle">
+  <div class="modal-sheet" id="phoneModalSheet">
+    <div class="modal-handle" aria-hidden="true"></div>
+    <h2 class="modal-title" id="phoneModalTitle">Check In with Phone</h2>
+    <p class="modal-sub">Enter the phone number linked to your member profile.</p>
+
+    <form method="POST" action="{{ route('checkin.store') }}" id="phoneForm">
+      @csrf
+      <div class="phone-modal-field">
+        <label class="reg-label" for="phone_modal">Phone Number <span class="req" style="color:#ef4444">*</span></label>
+        <input
+          type="tel"
+          id="phone_modal"
+          name="phone"
+          placeholder="e.g. 08012345678"
+          class="reg-input"
+          value="{{ old('phone') }}"
+          required
+          autocomplete="tel"
+          inputmode="tel"
+          style="margin-top: 6px;"
+        />
+        @error('phone')
+          <span class="reg-error">{{ $message }}</span>
+        @enderror
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <div class="modal-btn-row">
+        <button type="button" class="modal-btn-cancel" onclick="closePhoneModal()">Cancel</button>
+        <button type="submit" class="modal-btn-save" id="phoneSubmitBtn">
+          <span id="phoneBtnText">Mark Attendance</span>
+          <span class="spinner" id="phoneSpinner"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {{-- ═══ REGISTRATION MODAL ═══ --}}
-<div class="reg-modal-backdrop" id="regModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="regModalTitle">
-  <div class="reg-modal-sheet" id="regModalSheet">
+<div class="modal-backdrop" id="regModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="regModalTitle">
+  <div class="modal-sheet" id="regModalSheet">
     <div class="modal-handle" aria-hidden="true"></div>
 
     <h2 class="modal-title" id="regModalTitle">New Member Registration</h2>
@@ -782,7 +876,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
       <div class="reg-grid">
 
-        {{-- First Name --}}
         <div class="reg-field">
           <label class="reg-label" for="reg_first_name">First Name <span class="req">*</span></label>
           <input type="text" name="first_name" id="reg_first_name" required
@@ -794,7 +887,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
           @enderror
         </div>
 
-        {{-- Last Name --}}
         <div class="reg-field">
           <label class="reg-label" for="reg_last_name">Last Name <span class="req">*</span></label>
           <input type="text" name="last_name" id="reg_last_name" required
@@ -806,10 +898,25 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
           @enderror
         </div>
 
-        {{-- Phone --}}
         <div class="reg-field full">
-          <label class="reg-label" for="reg_phone">Phone Number <span class="req">*</span></label>
-          <input type="tel" name="phone" id="reg_phone" required
+          <label class="reg-label" for="reg_email">Email Address <span class="req">*</span></label>
+          <input type="email" name="email" id="reg_email" required
+            value="{{ old('email', session('attempted_email')) }}"
+            placeholder="e.g. john@example.com"
+            class="reg-input @error('email') is-invalid @enderror"
+            autocomplete="email"
+            inputmode="email">
+          @error('email')
+            <span class="reg-error">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <div class="reg-field full">
+          <label class="reg-label" for="reg_phone">
+            Phone Number
+            <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span>
+          </label>
+          <input type="tel" name="phone" id="reg_phone"
             value="{{ old('phone', session('attempted_phone')) }}"
             placeholder="e.g. 08012345678"
             class="reg-input @error('phone') is-invalid @enderror"
@@ -820,7 +927,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
           @enderror
         </div>
 
-        {{-- Church --}}
         <div class="reg-field full">
           <label class="reg-label" for="reg_church">Church/Fellowship</label>
           <input type="text" name="church" id="reg_church"
@@ -840,39 +946,74 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         </button>
       </div>
     </form>
-
   </div>
 </div>
 
 @push('scripts')
 <script>
-const backdrop = document.getElementById('regModalBackdrop');
-const sheet    = document.getElementById('regModalSheet');
+/* ── Phone modal ── */
+const phoneBackdrop = document.getElementById('phoneModalBackdrop');
+const phoneSheet    = document.getElementById('phoneModalSheet');
 
-function openRegModal() {
-  backdrop.classList.add('open');
-  sheet.classList.remove('closing');
+function openPhoneModal() {
+  phoneBackdrop.classList.add('open');
+  phoneSheet.classList.remove('closing');
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
-    const first = sheet.querySelector('input:not([type=hidden])[required]');
-    if (first) first.focus();
+    const inp = document.getElementById('phone_modal');
+    if (inp) inp.focus();
   }, 350);
 }
-
-function closeRegModal() {
-  sheet.classList.add('closing');
+function closePhoneModal() {
+  phoneSheet.classList.add('closing');
   setTimeout(() => {
-    backdrop.classList.remove('open');
-    sheet.classList.remove('closing');
+    phoneBackdrop.classList.remove('open');
+    phoneSheet.classList.remove('closing');
     document.body.style.overflow = '';
   }, 230);
 }
+phoneBackdrop.addEventListener('click', e => { if (e.target === phoneBackdrop) closePhoneModal(); });
 
-backdrop.addEventListener('click', e => { if (e.target === backdrop) closeRegModal(); });
+document.getElementById('phoneForm').addEventListener('submit', function() {
+  const btn     = document.getElementById('phoneSubmitBtn');
+  const spinner = document.getElementById('phoneSpinner');
+  const text    = document.getElementById('phoneBtnText');
+  btn.disabled  = true;
+  spinner.style.display = 'block';
+  text.textContent = 'Checking in…';
+});
 
-// Close modal on Escape key
+/* ── Registration modal ── */
+const regBackdrop = document.getElementById('regModalBackdrop');
+const regSheet    = document.getElementById('regModalSheet');
+
+function openRegModal() {
+  closePhoneModal();
+  setTimeout(() => {
+    regBackdrop.classList.add('open');
+    regSheet.classList.remove('closing');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      const first = regSheet.querySelector('input:not([type=hidden])[required]');
+      if (first) first.focus();
+    }, 350);
+  }, 240);
+}
+function closeRegModal() {
+  regSheet.classList.add('closing');
+  setTimeout(() => {
+    regBackdrop.classList.remove('open');
+    regSheet.classList.remove('closing');
+    document.body.style.overflow = '';
+  }, 230);
+}
+regBackdrop.addEventListener('click', e => { if (e.target === regBackdrop) closeRegModal(); });
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && backdrop.classList.contains('open')) closeRegModal();
+  if (e.key === 'Escape') {
+    if (regBackdrop.classList.contains('open'))   closeRegModal();
+    if (phoneBackdrop.classList.contains('open')) closePhoneModal();
+  }
 });
 
 document.getElementById('regForm').addEventListener('submit', function() {
@@ -888,6 +1029,7 @@ document.getElementById('regForm').addEventListener('submit', function() {
   document.addEventListener('DOMContentLoaded', openRegModal);
 @endif
 
+/* ── Toast ── */
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -907,7 +1049,7 @@ function showToast(message, type = 'success') {
   document.addEventListener('DOMContentLoaded', () => showToast('Something went wrong. Please try again.', 'error'));
 @endif
 
-// Animate the checked-in counter
+/* ── Checked-in counter animation ── */
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('checkin-count');
   if (!el) return;

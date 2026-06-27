@@ -10,14 +10,12 @@ class MemberController extends Controller
 {
     /**
      * Normalize a phone number to a consistent format.
-     * Strips all non-digit characters, then re-prefixes with 0.
-     * e.g. "08012345678", "8012345678", "+2348012345678" → "08012345678"
      */
     private function normalizePhone(string $phone): string
     {
         $digits = preg_replace('/\D/', '', $phone);
 
-        // Strip country code prefix (234 for Nigeria, extend as needed)
+        // Strip country code prefix (234 for Nigeria)
         if (str_starts_with($digits, '234') && strlen($digits) > 10) {
             $digits = substr($digits, 3);
         }
@@ -38,7 +36,8 @@ class MemberController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%$search%")
                   ->orWhere('last_name',  'like', "%$search%")
-                  ->orWhere('phone',      'like', "%$search%");
+                  ->orWhere('phone',      'like', "%$search%")
+                  ->orWhere('email',      'like', "%$search%");
             });
         }
 
@@ -76,7 +75,7 @@ class MemberController extends Controller
             }
         }
 
-        $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'phone', 'cell', 'church'])
+        $sortCol = in_array($request->get('sort'), ['title', 'first_name', 'last_name', 'phone', 'email', 'cell', 'church'])
             ? $request->get('sort') : 'first_name';
         $sortDir = $request->get('dir') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortCol, $sortDir);
@@ -107,14 +106,22 @@ class MemberController extends Controller
             'title'      => 'nullable|string|max:50',
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
-            'phone'      => 'required|string|max:30|unique:members,phone',
+            'email'      => 'nullable|email|max:255|unique:members,email',
+            'phone'      => 'nullable|string|max:30|unique:members,phone',
             'group'      => 'nullable|string|max:150',
             'church'     => 'nullable|string|max:150',
             'cell'       => 'nullable|string|max:150',
             'birthday'   => 'nullable|date',
         ]);
 
-        $data['phone']     = $this->normalizePhone($data['phone']);
+        if (!empty($data['phone'])) {
+            $data['phone'] = $this->normalizePhone($data['phone']);
+        }
+
+        if (!empty($data['email'])) {
+            $data['email'] = strtolower(trim($data['email']));
+        }
+
         $data['is_active'] = true;
 
         Member::create($data);
@@ -124,44 +131,28 @@ class MemberController extends Controller
 
     /**
      * Public check-in self-registration.
-     * On failure: redirect back to checkin with errors + re-flash attempted_phone.
-     * On success: redirect to checkin with status=registered.
      */
     public function publicStore(Request $request)
     {
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
-            'phone'      => 'required|string|max:30|unique:members,phone',
+            'email'      => 'required|email|max:255|unique:members,email',
+            'phone'      => 'nullable|string|max:30|unique:members,phone',
             'church'     => 'nullable|string|max:150',
         ]);
 
-        $validated['phone']     = $this->normalizePhone($validated['phone']);
-        $validated['is_active'] = false; // pending admin approval
+        $validated['email'] = strtolower(trim($validated['email']));
+
+        if (!empty($validated['phone'])) {
+            $validated['phone'] = $this->normalizePhone($validated['phone']);
+        }
+
+        $validated['is_active'] = true; // pending admin approval
 
         Member::create($validated);
 
-        return redirect()->route('checkin')
-            ->with('status', 'registered');
-    }
-
-    public function update(Request $request, Member $member)
-    {
-        $data = $request->validate([
-            'title'      => 'nullable|string|max:50',
-            'first_name' => 'required|string|max:100',
-            'last_name'  => 'required|string|max:100',
-            'phone'      => 'required|string|max:30|unique:members,phone,' . $member->id,
-            'group'      => 'nullable|string|max:150',
-            'church'     => 'nullable|string|max:150',
-            'cell'       => 'nullable|string|max:150',
-            'birthday'   => 'nullable|date',
-        ]);
-
-        $data['phone'] = $this->normalizePhone($data['phone']);
-        $member->update($data);
-
-        return back()->with('toast', 'Member updated.');
+        return redirect()->route('checkin')->with('status', 'registered');
     }
 
     public function destroy(Member $member)

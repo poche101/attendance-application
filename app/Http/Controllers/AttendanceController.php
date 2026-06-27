@@ -17,33 +17,54 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255|required_without:phone',
+            'phone' => 'nullable|string|max:20|required_without:email',
         ]);
 
-        // Normalize: strip non-digits, handle country code, ensure leading 0
-        $raw    = trim($request->input('phone'));
-        $digits = preg_replace('/\D/', '', $raw);
-        if (str_starts_with($digits, '234') && strlen($digits) > 10) {
-            $digits = substr($digits, 3);
-        }
-        if (!str_starts_with($digits, '0')) {
-            $digits = '0' . $digits;
-        }
-        $phone = $digits;
-
         $today = now()->toDateString();
+        $member = null;
+        $attemptedIdentifier = null;
+        $identifierType = null;
 
-        // 1. Look up member by phone number
-        $member = Member::where('phone', $phone)->first();
+        // ── Email path (primary) ──────────────────────────────────────────
+        if ($request->filled('email')) {
+            $email = strtolower(trim($request->input('email')));
+            $attemptedIdentifier = $email;
+            $identifierType = 'email';
+            $member = Member::where('email', $email)->first();
+        }
 
-        // 2. Member entirely missing — send them to register
+        // ── Phone path (optional fallback via modal) ──────────────────────
+        if (!$member && $request->filled('phone')) {
+            $raw    = trim($request->input('phone'));
+            $digits = preg_replace('/\D/', '', $raw);
+            if (str_starts_with($digits, '234') && strlen($digits) > 10) {
+                $digits = substr($digits, 3);
+            }
+            if (!str_starts_with($digits, '0')) {
+                $digits = '0' . $digits;
+            }
+            $phone = $digits;
+            $attemptedIdentifier = $phone;
+            $identifierType = 'phone';
+            $member = Member::where('phone', $phone)->first();
+        }
+
+        // 1. Member not found
         if (!$member) {
             return back()
                 ->with('status', 'not_found')
-                ->with('attempted_phone', $phone);
+                ->with('attempted_' . $identifierType, $attemptedIdentifier);
         }
 
-        // 3. Strict duplicate check — only one check-in per day
+        // 2. Pending activation
+        if (!$member->is_active) {
+            return back()
+                ->with('status', 'pending_activation')
+                ->with('member_name', $member->first_name);
+        }
+
+        // 3. Duplicate check
         $alreadyMarked = Attendance::where('member_id', $member->id)
             ->whereDate('attendance_date', $today)
             ->exists();
@@ -54,11 +75,12 @@ class AttendanceController extends Controller
                 ->with('member_name', $member->first_name);
         }
 
-        // 4. All clear — record attendance
+        // 4. Record attendance
         try {
             Attendance::create([
                 'member_id'       => $member->id,
-                'phone'           => $phone,
+                'phone'           => $member->phone ?? null,
+                'email'           => $member->email ?? null,
                 'attendance_date' => $today,
                 'submitted_at'    => now(),
             ]);

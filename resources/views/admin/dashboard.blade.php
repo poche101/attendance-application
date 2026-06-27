@@ -83,7 +83,7 @@
         </div>
         <form method="GET" action="{{ route('admin.dashboard') }}" style="display:flex; gap:12px; align-items:flex-end; width: 100%; max-width: 240px; margin-top: 4px;">
             <div style="width: 100%;">
-                <label style="font-size:12px; letter-spacing:0.07em; text-transform:uppercase; color:#1E40AF; margin-bottom:6px; display:block; font-family:'DM Sans',sans-serif;">Date</label>
+                <label style="font-size:12px; letter-spacing:0.07em; text-transform:uppercase; color:#1E40AF; margin-bottom:6px; display:block; font-family:'DM Sans',sans-serif;">Date Selection</label>
                 <input type="date" name="date" value="{{ $date }}" onchange="this.form.submit()"
                     style="width:100%; box-sizing:border-box; border:1.5px solid #93C5FD; border-radius:8px; padding:8px 12px; font-size:13px; background:white; color:#0F172A; font-family:'DM Sans',sans-serif;">
             </div>
@@ -97,7 +97,7 @@
                 ['label'=>'Present Today',   'value'=>$todayAttendance->count(), 'bar'=>$rate,  'barColor'=>'#166534', 'barBg'=>'#D1FAE5', 'big'=>true,  'icon'=>'✦'],
                 ['label'=>'Total Members',   'value'=>$totalMembers,              'bar'=>100,    'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>true,  'icon'=>'👥'],
                 ['label'=>'Attendance Rate', 'value'=>$rate.'%',                  'bar'=>$rate,  'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>true,  'icon'=>'📈'],
-                ['label'=>'Sunday Service',  'value'=>\Carbon\Carbon::parse($date)->format('d M Y'), 'bar'=>100, 'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>false, 'icon'=>'📅'],
+                ['label'=>'Selected Date',  'value'=>\Carbon\Carbon::parse($date)->format('d M Y'), 'bar'=>100, 'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>false, 'icon'=>'📅'],
             ];
         @endphp
         @foreach($stats as $s)
@@ -115,19 +115,21 @@
     {{-- Second row: weekly chart + group breakdown --}}
     <div class="two-column-grid">
 
-        {{-- Weekly Trend: last 7 Sundays --}}
+        {{-- Weekly Trend: last 7 Sundays relative to current selection --}}
         <div style="background:#fff; border:1.5px solid #93C5FD; border-radius:12px; padding:22px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap: 8px;">
                 <div>
-                    <p style="margin:0 0 2px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Last 7 Sundays</p>
-                    <h3 class="font-head" style="margin:0; font-size:20px; color:#0F172A; font-weight:600;">Weekly Trend</h3>
+                    <p style="margin:0 0 2px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Historical Trend</p>
+                    <h3 class="font-head" style="margin:0; font-size:20px; color:#0F172A; font-weight:600;">Weekly Attendance</h3>
                 </div>
-                <span style="font-size:11px; color:#1E40AF; font-family:'DM Sans',sans-serif; background:#DBEAFE; padding:3px 10px; border-radius:20px; white-space:nowrap;">Attendance Count</span>
+                <span style="font-size:11px; color:#1E40AF; font-family:'DM Sans',sans-serif; background:#DBEAFE; padding:3px 10px; border-radius:20px; white-space:nowrap;">Sundays Only</span>
             </div>
 
             @php
+                // Get the Sunday of the selected date's week
                 $anchor = \Carbon\Carbon::parse($date)->startOfWeek(\Carbon\Carbon::SUNDAY);
                 $weeks = [];
+                // Loop back to show the current Sunday and the 6 preceding ones
                 for ($i = 6; $i >= 0; $i--) {
                     $sunday = $anchor->copy()->subWeeks($i);
                     $count  = \App\Models\Attendance::whereDate('attendance_date', $sunday->toDateString())->count();
@@ -162,7 +164,7 @@
 
         {{-- Church breakdown --}}
         <div style="background:#fff; border:1.5px solid #93C5FD; border-radius:12px; padding:22px 24px;">
-            <p style="margin:0 0 2px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Today</p>
+            <p style="margin:0 0 2px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Current Selection</p>
             <h3 class="font-head" style="margin:0 0 18px; font-size:20px; color:#0F172A; font-weight:600;">By Church</h3>
             @php
                 $churchStats = $todayAttendance
@@ -174,7 +176,7 @@
                 $cColors = ['#3B82F6','#60A5FA','#34D399','#F59E0B','#A78BFA','#F472B6','#38BDF8','#FB923C'];
             @endphp
             @if($churchStats->isEmpty())
-                <p style="font-size:13px; color:#64748B; font-family:'DM Sans',sans-serif;">No data yet.</p>
+                <p style="font-size:13px; color:#64748B; font-family:'DM Sans',sans-serif;">No records for this date.</p>
             @endif
             @foreach($churchStats as $church => $cnt)
             @php
@@ -223,7 +225,6 @@
                         ['bg'=>'#FEE2E2','text'=>'#991B1B'],
                         ['bg'=>'#ECFDF5','text'=>'#065F46'],
                     ];
-                    // Build a stable church→color index map for consistent badge colours
                     $churchColorMap = [];
                     $colorCursor    = 0;
                 @endphp
@@ -247,7 +248,7 @@
                         <p style="margin:0; font-size:13px; font-weight:500; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             {{ $m ? $m->first_name.' '.$m->last_name : 'Unknown' }}
                         </p>
-                        <p style="margin:0; font-size:11px; color:#64748B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $a->email }}</p>
+                        <p style="margin:0; font-size:11px; color:#64748B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $a->phone ?? ($m ? $m->phone : 'N/A') }}</p>
                     </div>
                     @if($ch)
                     <span style="display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:500; white-space:nowrap; background:{{ $badgeStyle['bg'] }}; color:{{ $badgeStyle['text'] }}; max-width:80px; overflow:hidden; text-overflow:ellipsis;">
@@ -260,7 +261,7 @@
                 </div>
                 @empty
                 <div style="padding:40px; text-align:center; font-size:14px; color:#64748B; font-family:'DM Sans',sans-serif;">
-                    No attendance records for this date.
+                    No records found for {{ \Carbon\Carbon::parse($date)->format('d M Y') }}.
                 </div>
                 @endforelse
             </div>
@@ -275,11 +276,11 @@
                 <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">First Check-in</p>
                 @if($first)
                 <p class="font-head" style="margin:0; font-size:22px; color:#0F172A; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    {{ $first->member ? $first->member->first_name : 'Unknown' }}
+                    {{ $first->member ? $first->member->first_name : 'Guest' }}
                 </p>
                 <p style="margin:2px 0 0; font-size:12px; color:#3B82F6; font-family:'DM Sans',sans-serif;">{{ $first->submitted_at?->format('h:i A') }}</p>
                 @else
-                <p style="margin:0; font-size:13px; color:#64748B; font-family:'DM Sans',sans-serif;">No check-ins yet</p>
+                <p style="margin:0; font-size:13px; color:#64748B; font-family:'DM Sans',sans-serif;">No activity yet</p>
                 @endif
             </div>
 
@@ -288,7 +289,7 @@
             <div style="background:#FEF2F2; border:1.5px solid #FECACA; border-radius:12px; padding:18px 20px;">
                 <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#991B1B; font-family:'DM Sans',sans-serif;">Absent Today</p>
                 <p class="font-head" style="margin:0; font-size:36px; font-weight:700; color:#991B1B;">{{ max(0,$absentCount) }}</p>
-                <p style="margin:2px 0 0; font-size:12px; color:#EF4444; font-family:'DM Sans',sans-serif;">out of {{ $totalMembers }} members</p>
+                <p style="margin:2px 0 0; font-size:12px; color:#EF4444; font-family:'DM Sans',sans-serif;">from {{ $totalMembers }} members</p>
             </div>
 
             {{-- Top Church Today --}}
@@ -298,28 +299,28 @@
                 $topChurchPct   = $totalToday > 0 ? round(($topChurchCount / $totalToday) * 100) : 0;
             @endphp
             <div style="background:#fff; border:1.5px solid #93C5FD; border-radius:12px; padding:18px 20px;">
-                <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Top Church Today</p>
+                <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Leading Church Today</p>
                 <p class="font-head" style="margin:0; font-size:22px; color:#0F172A; font-weight:600; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                     {{ $topChurch }}
                 </p>
                 <p style="margin:4px 0 0; font-size:12px; color:#3B82F6; font-family:'DM Sans',sans-serif;">
-                    {{ $topChurchCount }} members · {{ $topChurchPct }}% of today
+                    {{ $topChurchCount }} present · {{ $topChurchPct }}% share
                 </p>
             </div>
 
-            {{-- Unique this week --}}
+            {{-- Unique this week (June Support) --}}
             @php
                 $weekStart   = \Carbon\Carbon::parse($date)->startOfWeek(\Carbon\Carbon::SUNDAY);
                 $weekEnd     = $weekStart->copy()->endOfWeek(\Carbon\Carbon::SATURDAY);
-                $newThisWeek = \App\Models\Attendance::whereDate('attendance_date', '>=', $weekStart->toDateString())
+                $uniqueWeekCount = \App\Models\Attendance::whereDate('attendance_date', '>=', $weekStart->toDateString())
                     ->whereDate('attendance_date', '<=', $weekEnd->toDateString())
-                    ->distinct('email')
-                    ->count('email');
+                    ->distinct('phone') // Using phone as unique identifier if email is NULL
+                    ->count('phone');
             @endphp
             <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:12px; padding:18px 20px;">
                 <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#166534; font-family:'DM Sans',sans-serif;">Unique This Week</p>
-                <p class="font-head" style="margin:0; font-size:36px; font-weight:700; color:#166534;">{{ $newThisWeek }}</p>
-                <p style="margin:2px 0 0; font-size:12px; color:#4ADE80; font-family:'DM Sans',sans-serif;">distinct attendees</p>
+                <p class="font-head" style="margin:0; font-size:36px; font-weight:700; color:#166534;">{{ $uniqueWeekCount }}</p>
+                <p style="margin:2px 0 0; font-size:12px; color:#4ADE80; font-family:'DM Sans',sans-serif;">distinct participants</p>
             </div>
         </div>
     </div>

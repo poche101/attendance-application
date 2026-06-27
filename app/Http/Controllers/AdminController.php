@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $date = $request->get('date', now()->toDateString());
+        // Dynamically captures whatever date is input (even into June/July)
+        $date = $request->get('date', Carbon::today()->toDateString());
 
         $todayAttendance = Attendance::with('member')
             ->whereDate('attendance_date', $date)
@@ -26,7 +28,7 @@ class AdminController extends Controller
     public function rankings(Request $request)
     {
         $from = $request->get('from', '2024-01-01');
-        $to   = $request->get('to', now()->toDateString());
+        $to   = $request->get('to', Carbon::today()->toDateString());
 
         $attendances = Attendance::with('member')
             ->whereDate('attendance_date', '>=', $from)
@@ -63,7 +65,7 @@ class AdminController extends Controller
     public function exportCsv(Request $request)
     {
         $from  = $request->get('from', '2024-01-01');
-        $to    = $request->get('to', now()->toDateString());
+        $to    = $request->get('to', Carbon::today()->toDateString());
         $group = $request->get('group');
 
         $query = Attendance::with('member')
@@ -86,6 +88,12 @@ class AdminController extends Controller
             fputcsv($handle, ['First Name', 'Last Name', 'Phone', 'Group', 'Church', 'Cell', 'Birthday', 'Status', 'Service', 'Date']);
             foreach ($records as $a) {
                 $m = $a->member;
+                
+                // Safe formatting fallback checking if attendance_date is properly cast
+                $dateString = ($a->attendance_date instanceof Carbon) 
+                    ? $a->attendance_date->format('Y-m-d') 
+                    : Carbon::parse($a->attendance_date)->format('Y-m-d');
+
                 fputcsv($handle, [
                     $m?->first_name ?? '',
                     $m?->last_name  ?? '',
@@ -93,10 +101,10 @@ class AdminController extends Controller
                     $m?->group      ?? '',
                     $m?->church     ?? '',
                     $m?->cell       ?? '',
-                    $m?->birthday?->format('Y-m-d') ?? '',
+                    $m?->birthday   ?? '',
                     'Present',
                     'Sunday Service',
-                    $a->attendance_date->format('Y-m-d'),
+                    $dateString,
                 ]);
             }
             fclose($handle);
