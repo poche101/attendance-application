@@ -668,6 +668,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
             <p class="state-member">{{ session('member_name') }}</p>
           @endif
           <p class="state-body">Your attendance has been recorded. God bless you.</p>
+          @if(session('children_count') > 0)
+            <p class="state-body">
+              + {{ session('children_count') }} {{ Str::plural('child', session('children_count')) }} checked in with you.
+            </p>
+          @endif
           <a href="{{ route('checkin') }}" class="state-btn">Mark Another →</a>
         </div>
 
@@ -791,6 +796,24 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
             @error('email')
               <p class="error-msg" role="alert">{{ $message }}</p>
             @enderror
+
+            <label for="children_count" class="field-label">Children With You</label>
+            <input
+              type="number"
+              id="children_count"
+              name="children_count"
+              min="0"
+              max="20"
+              step="1"
+              placeholder="0"
+              class="field-input"
+              value="{{ old('children_count', 0) }}"
+              inputmode="numeric"
+            />
+            @error('children_count')
+              <p class="error-msg" role="alert">{{ $message }}</p>
+            @enderror
+
             <button type="submit" class="submit-btn">
               Mark My Attendance <span aria-hidden="true">→</span>
             </button>
@@ -846,6 +869,26 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
           style="margin-top: 6px;"
         />
         @error('phone')
+          <span class="reg-error">{{ $message }}</span>
+        @enderror
+      </div>
+
+      <div class="phone-modal-field" style="margin-top: 14px;">
+        <label class="reg-label" for="children_modal">Children With You</label>
+        <input
+          type="number"
+          id="children_modal"
+          name="children_count"
+          min="0"
+          max="20"
+          step="1"
+          placeholder="0"
+          class="reg-input"
+          value="{{ old('children_count', 0) }}"
+          inputmode="numeric"
+          style="margin-top: 6px;"
+        />
+        @error('children_count')
           <span class="reg-error">{{ $message }}</span>
         @enderror
       </div>

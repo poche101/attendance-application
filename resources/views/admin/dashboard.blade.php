@@ -70,7 +70,7 @@
     /* Laptops and Desktops */
     @media (min-width: 1024px) {
         .stat-cards-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
         }
     }
 </style>
@@ -93,8 +93,10 @@
     {{-- Stat cards --}}
     <div class="stat-cards-grid">
         @php
+            $childrenToday = $todayAttendance->sum('children_count');
             $stats = [
                 ['label'=>'Present Today',   'value'=>$todayAttendance->count(), 'bar'=>$rate,  'barColor'=>'#166534', 'barBg'=>'#D1FAE5', 'big'=>true,  'icon'=>'✦'],
+                ['label'=>'Children Checked In', 'value'=>$childrenToday,        'bar'=>$todayAttendance->count() ? min(100, round(($childrenToday / max(1,$todayAttendance->count())) * 100)) : 0, 'barColor'=>'#9333EA', 'barBg'=>'#F3E8FF', 'big'=>true,  'icon'=>'🧒'],
                 ['label'=>'Total Members',   'value'=>$totalMembers,              'bar'=>100,    'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>true,  'icon'=>'👥'],
                 ['label'=>'Attendance Rate', 'value'=>$rate.'%',                  'bar'=>$rate,  'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>true,  'icon'=>'📈'],
                 ['label'=>'Selected Date',  'value'=>\Carbon\Carbon::parse($date)->format('d M Y'), 'bar'=>100, 'barColor'=>'#1E40AF', 'barBg'=>'#DBEAFE', 'big'=>false, 'icon'=>'📅'],
@@ -207,9 +209,16 @@
                 <h3 class="font-head" style="margin:0; font-size:20px; color:#0F172A; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
                     Attendees — {{ \Carbon\Carbon::parse($date)->format('D, d M Y') }}
                 </h3>
-                <span style="display:inline-block; padding:2px 12px; border-radius:20px; font-size:11px; background:#DBEAFE; color:#1E40AF; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap;">
-                    {{ $todayAttendance->count() }} present
-                </span>
+                <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+                    <span style="display:inline-block; padding:2px 12px; border-radius:20px; font-size:11px; background:#DBEAFE; color:#1E40AF; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap;">
+                        {{ $todayAttendance->count() }} present
+                    </span>
+                    @if($childrenToday > 0)
+                    <span style="display:inline-block; padding:2px 12px; border-radius:20px; font-size:11px; background:#F3E8FF; color:#6B21A8; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap;">
+                        {{ $childrenToday }} {{ Str::plural('child', $childrenToday) }}
+                    </span>
+                    @endif
+                </div>
             </div>
             <div style="max-height:360px; overflow-y:auto;">
                 @php
@@ -253,6 +262,11 @@
                     @if($ch)
                     <span style="display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:500; white-space:nowrap; background:{{ $badgeStyle['bg'] }}; color:{{ $badgeStyle['text'] }}; max-width:80px; overflow:hidden; text-overflow:ellipsis;">
                         {{ $ch }}
+                    </span>
+                    @endif
+                    @if(($a->children_count ?? 0) > 0)
+                    <span title="Children checked in with this member" style="display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; background:#F3E8FF; color:#6B21A8; flex-shrink:0;">
+                        🧒 {{ $a->children_count }}
                     </span>
                     @endif
                     <p style="margin:0; font-size:11px; color:#3B82F6; white-space:nowrap; flex-shrink:0;">
@@ -305,6 +319,15 @@
                 </p>
                 <p style="margin:4px 0 0; font-size:12px; color:#3B82F6; font-family:'DM Sans',sans-serif;">
                     {{ $topChurchCount }} present · {{ $topChurchPct }}% share
+                </p>
+            </div>
+
+            {{-- Children Today (moved into insights for small screens) --}}
+            <div style="background:#FAF5FF; border:1.5px solid #E9D5FF; border-radius:12px; padding:18px 20px;">
+                <p style="margin:0 0 4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#6B21A8; font-family:'DM Sans',sans-serif;">Children Checked In</p>
+                <p class="font-head" style="margin:0; font-size:36px; font-weight:700; color:#6B21A8;">{{ $childrenToday }}</p>
+                <p style="margin:2px 0 0; font-size:12px; color:#A855F7; font-family:'DM Sans',sans-serif;">
+                    across {{ $todayAttendance->where('children_count', '>', 0)->count() }} {{ Str::plural('family', $todayAttendance->where('children_count', '>', 0)->count()) }}
                 </p>
             </div>
 

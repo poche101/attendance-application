@@ -17,14 +17,16 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'nullable|email|max:255|required_without:phone',
-            'phone' => 'nullable|string|max:20|required_without:email',
+            'email'          => 'nullable|email|max:255|required_without:phone',
+            'phone'          => 'nullable|string|max:20|required_without:email',
+            'children_count' => 'nullable|integer|min:0|max:20',
         ]);
 
         $today = now()->toDateString();
         $member = null;
         $attemptedIdentifier = null;
         $identifierType = null;
+        $childrenCount = (int) $request->input('children_count', 0);
 
         // ── Email path (primary) ──────────────────────────────────────────
         if ($request->filled('email')) {
@@ -82,6 +84,7 @@ class AttendanceController extends Controller
                 'phone'           => $member->phone ?? null,
                 'email'           => $member->email ?? null,
                 'attendance_date' => $today,
+                'children_count'  => $childrenCount,
                 'submitted_at'    => now(),
             ]);
         } catch (\Exception $e) {
@@ -91,6 +94,7 @@ class AttendanceController extends Controller
 
         return back()
             ->with('status', 'success')
-            ->with('member_name', $member->first_name);
+            ->with('member_name', $member->first_name)
+            ->with('children_count', $childrenCount);
     }
 }

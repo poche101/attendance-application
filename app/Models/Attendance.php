@@ -12,6 +12,7 @@ class Attendance extends Model
         'phone',
         'email',
         'attendance_date',
+         'children_count',
         'submitted_at',
     ];
 
