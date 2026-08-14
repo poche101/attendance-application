@@ -17,6 +17,7 @@ Route::get('/', [AttendanceController::class, 'index'])->name('checkin');
 Route::post('/checkin', [AttendanceController::class, 'store'])->name('checkin.store');
 
 Route::post('/register', [MemberController::class, 'publicStore'])->name('members.store');
+
 // Admin Authentication Gateway
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/admin/login', [AuthController::class, 'login'])->name('login.post');
@@ -26,6 +27,7 @@ Route::post('/admin/logout', [AuthController::class, 'logout'])->name('logout');
 Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     // Core Reporting Hubs
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::post('/dashboard/sms/absent', [AdminController::class, 'sendAbsentSms'])->name('dashboard.sms.absent');
     Route::get('/rankings', [AdminController::class, 'rankings'])->name('rankings');
 
     // Member Operations Management

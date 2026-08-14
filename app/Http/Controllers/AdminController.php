@@ -4,11 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Member;
+use App\Services\BulkSmsNigeriaService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    /**
+     * How many days a check-in should keep a member showing as "Present"
+     * on the dashboard before they roll over into "Absent".
+     */
+    protected const PRESENT_WINDOW_DAYS = 6;
+
     public function dashboard(Request $request)
     {
         // Dynamically captures whatever date is input (even into June/July)
@@ -22,7 +29,90 @@ class AdminController extends Controller
         $totalMembers = Member::where('is_active', true)->count();
         $rate = $totalMembers > 0 ? round(($todayAttendance->count() / $totalMembers) * 100) : 0;
 
-        return view('admin.dashboard', compact('todayAttendance', 'date', 'totalMembers', 'rate'));
+        // ── Rolling present/absent window ──────────────────────────────
+        // A member who checked in any time in the last N days (inclusive of
+        // the selected date) stays "Present". Everyone else is "Absent".
+        $windowDays  = self::PRESENT_WINDOW_DAYS;
+        $windowStart = Carbon::parse($date)->subDays($windowDays - 1)->toDateString();
+
+        [$rollingAttendance, $absentMembers] = $this->presentAndAbsent($windowStart, $date);
+
+        return view('admin.dashboard', compact(
+            'todayAttendance',
+            'date',
+            'totalMembers',
+            'rate',
+            'rollingAttendance',
+            'absentMembers',
+            'windowStart',
+            'windowDays'
+        ));
+    }
+
+    /**
+     * Manually trigger an SMS to every active member who has not checked in
+     * within the rolling present window ending on the given date.
+     */
+    public function sendAbsentSms(Request $request, BulkSmsNigeriaService $sms)
+    {
+        $request->validate([
+            'date'    => 'nullable|date',
+            'message' => 'required|string|max:459',
+        ]);
+
+        $date        = $request->get('date', Carbon::today()->toDateString());
+        $windowDays  = self::PRESENT_WINDOW_DAYS;
+        $windowStart = Carbon::parse($date)->subDays($windowDays - 1)->toDateString();
+
+        [, $absentMembers] = $this->presentAndAbsent($windowStart, $date);
+
+        $recipients = $absentMembers
+            ->filter(fn ($m) => !empty($m->phone))
+            ->pluck('phone')
+            ->all();
+
+        if (empty($recipients)) {
+            return redirect()
+                ->route('admin.dashboard', ['date' => $date])
+                ->with('sms_status', 'none');
+        }
+
+        $result = $sms->sendToMany($recipients, $request->input('message'));
+
+        return redirect()
+            ->route('admin.dashboard', ['date' => $date])
+            ->with('sms_status', $result['success'] ? 'sent' : 'error')
+            ->with('sms_sent_count', count($result['sent_to']))
+            ->with('sms_skipped_count', count($result['skipped']))
+            ->with('sms_error', $result['error']);
+    }
+
+    /**
+     * Shared helper: given a date window, return [rollingAttendance, absentMembers].
+     *
+     * $rollingAttendance = Attendance rows within the window, one per member
+     *                      (their most recent check-in), most recent first.
+     * $absentMembers     = active Members with no check-in inside the window.
+     */
+    protected function presentAndAbsent(string $windowStart, string $windowEnd): array
+    {
+        $rollingAttendance = Attendance::with('member')
+            ->whereDate('attendance_date', '>=', $windowStart)
+            ->whereDate('attendance_date', '<=', $windowEnd)
+            ->whereNotNull('member_id')
+            ->latest('submitted_at')
+            ->get()
+            ->unique('member_id')
+            ->values();
+
+        $presentMemberIds = $rollingAttendance->pluck('member_id')->all();
+
+        $absentMembers = Member::where('is_active', true)
+            ->whereNotIn('id', $presentMemberIds)
+            ->orderBy('first_name')
+            ->get();
+
+        return [$rollingAttendance, $absentMembers];
     }
 
     public function rankings(Request $request)
@@ -88,10 +178,10 @@ class AdminController extends Controller
             fputcsv($handle, ['First Name', 'Last Name', 'Phone', 'Group', 'Church', 'Cell', 'Birthday', 'Status', 'Service', 'Date']);
             foreach ($records as $a) {
                 $m = $a->member;
-                
+
                 // Safe formatting fallback checking if attendance_date is properly cast
-                $dateString = ($a->attendance_date instanceof Carbon) 
-                    ? $a->attendance_date->format('Y-m-d') 
+                $dateString = ($a->attendance_date instanceof Carbon)
+                    ? $a->attendance_date->format('Y-m-d')
                     : Carbon::parse($a->attendance_date)->format('Y-m-d');
 
                 fputcsv($handle, [

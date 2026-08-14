@@ -37,6 +37,11 @@
         grid-template-columns: 1fr;
         gap: 16px;
     }
+    .present-absent-columns {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 
     /* Small Tablets and up */
     @media (min-width: 640px) {
@@ -64,6 +69,9 @@
         .insights-panel {
             display: flex;
             flex-direction: column;
+        }
+        .present-absent-columns {
+            grid-template-columns: 1fr 1fr;
         }
     }
 
@@ -113,6 +121,26 @@
         </div>
         @endforeach
     </div>
+
+    {{-- SMS result flash message --}}
+    @if(session('sms_status'))
+    <div style="margin-bottom:24px; padding:14px 18px; border-radius:10px; font-size:13px; font-family:'DM Sans',sans-serif;
+        @if(session('sms_status') === 'sent') background:#F0FDF4; border:1.5px solid #86EFAC; color:#166534;
+        @elseif(session('sms_status') === 'none') background:#EFF6FF; border:1.5px solid #93C5FD; color:#1E40AF;
+        @else background:#FEF2F2; border:1.5px solid #FECACA; color:#991B1B;
+        @endif">
+        @if(session('sms_status') === 'sent')
+            ✓ SMS sent to {{ session('sms_sent_count') }} absent member(s).
+            @if(session('sms_skipped_count') > 0)
+                {{ session('sms_skipped_count') }} skipped (invalid or missing phone number).
+            @endif
+        @elseif(session('sms_status') === 'none')
+            No absent members with a valid phone number found for this window — nothing was sent.
+        @else
+            Could not send SMS: {{ session('sms_error') }}
+        @endif
+    </div>
+    @endif
 
     {{-- Second row: weekly chart + group breakdown --}}
     <div class="two-column-grid">
@@ -197,6 +225,82 @@
                 </div>
             </div>
             @endforeach
+        </div>
+    </div>
+
+    {{-- Present / Absent — rolling {{ $windowDays }}-day window --}}
+    <div style="background:#fff; border:1.5px solid #93C5FD; border-radius:12px; padding:22px 24px; margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+            <div>
+                <p style="margin:0 0 2px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#1E40AF; font-family:'DM Sans',sans-serif;">Rolling Window</p>
+                <h3 class="font-head" style="margin:0; font-size:20px; color:#0F172A; font-weight:600;">
+                    Present &amp; Absent — Last {{ $windowDays }} Days
+                </h3>
+                <p style="margin:4px 0 0; font-size:11px; color:#64748B; font-family:'DM Sans',sans-serif;">
+                    {{ \Carbon\Carbon::parse($windowStart)->format('d M') }} – {{ \Carbon\Carbon::parse($date)->format('d M Y') }}.
+                    A member stays "Present" for {{ $windowDays }} days after their last check-in, then moves to "Absent".
+                </p>
+            </div>
+            @if($absentMembers->count() > 0)
+            <button type="button" onclick="document.getElementById('sms-modal').classList.remove('hidden')"
+                style="background:#1E40AF; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
+                📲 Send SMS to Absentees ({{ $absentMembers->count() }})
+            </button>
+            @endif
+        </div>
+
+        <div class="present-absent-columns">
+            {{-- Present column --}}
+            <div>
+                <p style="margin:0 0 10px; font-size:12px; font-weight:600; color:#166534; font-family:'DM Sans',sans-serif;">
+                    ✓ Present ({{ $rollingAttendance->count() }})
+                </p>
+                <div style="max-height:320px; overflow-y:auto; border:1px solid #E2E8F0; border-radius:8px;">
+                    @forelse($rollingAttendance as $a)
+                    @php
+                        $m = $a->member;
+                        $aDate = $a->attendance_date instanceof \Carbon\Carbon
+                            ? $a->attendance_date
+                            : \Carbon\Carbon::parse($a->attendance_date);
+                    @endphp
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-bottom:1px solid #F1F5F9; font-size:12.5px; font-family:'DM Sans',sans-serif;">
+                        <span style="color:#0F172A; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            {{ $m ? $m->first_name.' '.$m->last_name : 'Unknown' }}
+                        </span>
+                        <span style="color:#64748B; font-size:11px; white-space:nowrap; flex-shrink:0; margin-left:10px;">
+                            {{ $aDate->format('d M') }}
+                        </span>
+                    </div>
+                    @empty
+                    <p style="padding:20px; text-align:center; font-size:12.5px; color:#64748B; font-family:'DM Sans',sans-serif; margin:0;">
+                        No check-ins in this window.
+                    </p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Absent column --}}
+            <div>
+                <p style="margin:0 0 10px; font-size:12px; font-weight:600; color:#991B1B; font-family:'DM Sans',sans-serif;">
+                    ✗ Absent ({{ $absentMembers->count() }})
+                </p>
+                <div style="max-height:320px; overflow-y:auto; border:1px solid #E2E8F0; border-radius:8px;">
+                    @forelse($absentMembers as $m)
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-bottom:1px solid #F1F5F9; font-size:12.5px; font-family:'DM Sans',sans-serif;">
+                        <span style="color:#0F172A; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            {{ $m->first_name }} {{ $m->last_name }}
+                        </span>
+                        <span style="color:#94A3B8; font-size:11px; white-space:nowrap; flex-shrink:0; margin-left:10px;">
+                            {{ $m->phone ?? 'No phone' }}
+                        </span>
+                    </div>
+                    @empty
+                    <p style="padding:20px; text-align:center; font-size:12.5px; color:#64748B; font-family:'DM Sans',sans-serif; margin:0;">
+                        Everyone has checked in recently 🎉
+                    </p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 
@@ -348,4 +452,46 @@
         </div>
     </div>
 </div>
+
+{{-- Send Absent SMS Modal --}}
+<div id="sms-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl md:text-2xl text-slate-800 font-semibold">Send SMS to Absentees</h2>
+            <button type="button" onclick="document.getElementById('sms-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">&times;</button>
+        </div>
+        <p class="text-sm text-slate-500 mb-5">
+            This will message <strong>{{ $absentMembers->count() }}</strong> member(s) who haven't checked in over the last {{ $windowDays }} days ({{ \Carbon\Carbon::parse($windowStart)->format('d M') }} – {{ \Carbon\Carbon::parse($date)->format('d M Y') }}).
+        </p>
+        <form method="POST" action="{{ route('admin.dashboard.sms.absent') }}" id="sms-form">
+            @csrf
+            <input type="hidden" name="date" value="{{ $date }}">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-blue-700 mb-2">Message</label>
+            <textarea name="message" rows="4" maxlength="459" required
+                class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-y mb-1"
+            >We missed you at Sunday Service! Hope to see you soon. God bless you.</textarea>
+            <p class="text-xs text-slate-400 mb-5">Keep it under 459 characters (3 SMS segments). Sender ID must be approved in your BulkSMSNigeria dashboard.</p>
+            <div class="flex justify-end gap-2.5">
+                <button type="button" onclick="document.getElementById('sms-modal').classList.add('hidden')"
+                    class="px-4 py-2.5 border border-blue-200 rounded-lg bg-white text-blue-700 text-sm font-medium hover:bg-blue-50/50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="sms-submit-btn"
+                    class="px-5 py-2.5 border-none rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20">
+                    Send Now
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.getElementById('sms-form').addEventListener('submit', function () {
+    const btn = document.getElementById('sms-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+});
+</script>
+@endpush
 @endsection

@@ -767,10 +767,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
               <line x1="22" y1="11" x2="16" y2="11"/>
             </svg>
           </div>
-          <h2 class="state-heading">Registration Submitted!</h2>
+          <h2 class="state-heading">You're All Set!</h2>
           <p class="state-body">
-            Your details have been received.<br>
-            An administrator will activate your account shortly. God bless you.
+            Your details have been received and your profile is now active.<br>
+            You can check in below right away. God bless you.
           </p>
           <a href="{{ route('checkin') }}" class="state-btn">Back to Check-in →</a>
         </div>
@@ -912,7 +912,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
     <div class="modal-handle" aria-hidden="true"></div>
 
     <h2 class="modal-title" id="regModalTitle">New Member Registration</h2>
-    <p class="modal-sub">Fill in your details and tap Register. An administrator will activate your account before you can check in.</p>
+    <p class="modal-sub">Fill in your details and tap Register — you'll be able to check in immediately after.</p>
 
     <form method="POST" action="{{ route('members.store') }}" id="regForm" novalidate>
       @csrf
@@ -1081,7 +1081,7 @@ function showToast(message, type = 'success') {
 }
 
 @if(session('status') === 'registered')
-  document.addEventListener('DOMContentLoaded', () => showToast('Registration submitted successfully!', 'success'));
+  document.addEventListener('DOMContentLoaded', () => showToast('Registered and activated — you can check in now!', 'success'));
 @elseif(session('status') === 'success')
   document.addEventListener('DOMContentLoaded', () => showToast('Attendance marked! God bless you.', 'success'));
 @elseif(session('status') === 'duplicate')
