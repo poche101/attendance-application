@@ -74,7 +74,8 @@ class AdminController extends Controller
         if (empty($recipients)) {
             return redirect()
                 ->route('admin.dashboard', ['date' => $date])
-                ->with('sms_status', 'none');
+                ->with('sms_status', 'none')
+                ->with('sms_audience', 'absent');
         }
 
         $result = $sms->sendToMany($recipients, $request->input('message'));
@@ -84,7 +85,50 @@ class AdminController extends Controller
             ->with('sms_status', $result['success'] ? 'sent' : 'error')
             ->with('sms_sent_count', count($result['sent_to']))
             ->with('sms_skipped_count', count($result['skipped']))
-            ->with('sms_error', $result['error']);
+            ->with('sms_error', $result['error'])
+            ->with('sms_audience', 'absent');
+    }
+
+    /**
+     * Manually trigger an SMS to every member who HAS checked in within the
+     * rolling present window ending on the given date.
+     */
+    public function sendPresentSms(Request $request, BulkSmsNigeriaService $sms)
+    {
+        $request->validate([
+            'date'    => 'nullable|date',
+            'message' => 'required|string|max:459',
+        ]);
+
+        $date        = $request->get('date', Carbon::today()->toDateString());
+        $windowDays  = self::PRESENT_WINDOW_DAYS;
+        $windowStart = Carbon::parse($date)->subDays($windowDays - 1)->toDateString();
+
+        [$rollingAttendance, ] = $this->presentAndAbsent($windowStart, $date);
+
+        $recipients = $rollingAttendance
+            ->filter(fn ($a) => !empty($a->member?->phone))
+            ->pluck('member.phone')
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($recipients)) {
+            return redirect()
+                ->route('admin.dashboard', ['date' => $date])
+                ->with('sms_status', 'none')
+                ->with('sms_audience', 'present');
+        }
+
+        $result = $sms->sendToMany($recipients, $request->input('message'));
+
+        return redirect()
+            ->route('admin.dashboard', ['date' => $date])
+            ->with('sms_status', $result['success'] ? 'sent' : 'error')
+            ->with('sms_sent_count', count($result['sent_to']))
+            ->with('sms_skipped_count', count($result['skipped']))
+            ->with('sms_error', $result['error'])
+            ->with('sms_audience', 'present');
     }
 
     /**

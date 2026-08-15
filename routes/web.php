@@ -28,6 +28,7 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     // Core Reporting Hubs
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::post('/dashboard/sms/absent', [AdminController::class, 'sendAbsentSms'])->name('dashboard.sms.absent');
+    Route::post('/dashboard/sms/present', [AdminController::class, 'sendPresentSms'])->name('dashboard.sms.present');
     Route::get('/rankings', [AdminController::class, 'rankings'])->name('rankings');
 
     // Member Operations Management

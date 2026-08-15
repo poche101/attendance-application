@@ -130,12 +130,12 @@
         @else background:#FEF2F2; border:1.5px solid #FECACA; color:#991B1B;
         @endif">
         @if(session('sms_status') === 'sent')
-            ✓ SMS sent to {{ session('sms_sent_count') }} absent member(s).
+            ✓ SMS sent to {{ session('sms_sent_count') }} {{ session('sms_audience') === 'present' ? 'present' : 'absent' }} member(s).
             @if(session('sms_skipped_count') > 0)
                 {{ session('sms_skipped_count') }} skipped (invalid or missing phone number).
             @endif
         @elseif(session('sms_status') === 'none')
-            No absent members with a valid phone number found for this window — nothing was sent.
+            No {{ session('sms_audience') === 'present' ? 'present' : 'absent' }} members with a valid phone number found for this window — nothing was sent.
         @else
             Could not send SMS: {{ session('sms_error') }}
         @endif
@@ -241,12 +241,20 @@
                     A member stays "Present" for {{ $windowDays }} days after their last check-in, then moves to "Absent".
                 </p>
             </div>
-            @if($absentMembers->count() > 0)
-            <button type="button" onclick="document.getElementById('sms-modal').classList.remove('hidden')"
-                style="background:#1E40AF; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
-                📲 Send SMS to Absentees ({{ $absentMembers->count() }})
-            </button>
-            @endif
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                @if($rollingAttendance->count() > 0)
+                <button type="button" onclick="document.getElementById('sms-present-modal').classList.remove('hidden')"
+                    style="background:#166534; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
+                    📲 Send SMS to Present ({{ $rollingAttendance->count() }})
+                </button>
+                @endif
+                @if($absentMembers->count() > 0)
+                <button type="button" onclick="document.getElementById('sms-modal').classList.remove('hidden')"
+                    style="background:#1E40AF; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
+                    📲 Send SMS to Absentees ({{ $absentMembers->count() }})
+                </button>
+                @endif
+            </div>
         </div>
 
         <div class="present-absent-columns">
@@ -485,10 +493,48 @@
     </div>
 </div>
 
+{{-- Send Present SMS Modal --}}
+<div id="sms-present-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl md:text-2xl text-slate-800 font-semibold">Send SMS to Present Members</h2>
+            <button type="button" onclick="document.getElementById('sms-present-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">&times;</button>
+        </div>
+        <p class="text-sm text-slate-500 mb-5">
+            This will message <strong>{{ $rollingAttendance->count() }}</strong> member(s) who checked in over the last {{ $windowDays }} days ({{ \Carbon\Carbon::parse($windowStart)->format('d M') }} – {{ \Carbon\Carbon::parse($date)->format('d M Y') }}).
+        </p>
+        <form method="POST" action="{{ route('admin.dashboard.sms.present') }}" id="sms-present-form">
+            @csrf
+            <input type="hidden" name="date" value="{{ $date }}">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-green-700 mb-2">Message</label>
+            <textarea name="message" rows="4" maxlength="459" required
+                class="w-full border border-green-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-y mb-1"
+            >Thank you for joining us at Sunday Service! We're grateful you were here. God bless you.</textarea>
+            <p class="text-xs text-slate-400 mb-5">Keep it under 459 characters (3 SMS segments). Sender ID must be approved in your BulkSMSNigeria dashboard.</p>
+            <div class="flex justify-end gap-2.5">
+                <button type="button" onclick="document.getElementById('sms-present-modal').classList.add('hidden')"
+                    class="px-4 py-2.5 border border-green-200 rounded-lg bg-white text-green-700 text-sm font-medium hover:bg-green-50/50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="sms-present-submit-btn"
+                    class="px-5 py-2.5 border-none rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-md shadow-green-500/20">
+                    Send Now
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 document.getElementById('sms-form').addEventListener('submit', function () {
     const btn = document.getElementById('sms-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+});
+
+document.getElementById('sms-present-form').addEventListener('submit', function () {
+    const btn = document.getElementById('sms-present-submit-btn');
     btn.disabled = true;
     btn.textContent = 'Sending…';
 });
