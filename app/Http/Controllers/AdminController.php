@@ -132,6 +132,76 @@ class AdminController extends Controller
     }
 
     /**
+     * Stream a CSV of members currently "Present" within the rolling window
+     * ending on the given date (defaults to today).
+     */
+    public function exportPresent(Request $request)
+    {
+        $request->validate(['date' => 'nullable|date']);
+
+        $date        = $request->get('date', Carbon::today()->toDateString());
+        $windowDays  = self::PRESENT_WINDOW_DAYS;
+        $windowStart = Carbon::parse($date)->subDays($windowDays - 1)->toDateString();
+
+        [$rollingAttendance, ] = $this->presentAndAbsent($windowStart, $date);
+
+        $filename = "present_{$windowStart}_to_{$date}.csv";
+
+        return response()->streamDownload(function () use ($rollingAttendance) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Name', 'Phone', 'Church', 'Check-in Date', 'Children']);
+
+            foreach ($rollingAttendance as $a) {
+                $m = $a->member;
+
+                $dateString = ($a->attendance_date instanceof Carbon)
+                    ? $a->attendance_date->format('Y-m-d')
+                    : Carbon::parse($a->attendance_date)->format('Y-m-d');
+
+                fputcsv($handle, [
+                    $m ? "{$m->first_name} {$m->last_name}" : 'Unknown',
+                    $a->phone ?? ($m->phone ?? 'N/A'),
+                    $m->church ?? 'Unknown',
+                    $dateString,
+                    $a->children_count ?? 0,
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * Stream a CSV of active members currently "Absent" within the rolling
+     * window ending on the given date (defaults to today).
+     */
+    public function exportAbsent(Request $request)
+    {
+        $request->validate(['date' => 'nullable|date']);
+
+        $date        = $request->get('date', Carbon::today()->toDateString());
+        $windowDays  = self::PRESENT_WINDOW_DAYS;
+        $windowStart = Carbon::parse($date)->subDays($windowDays - 1)->toDateString();
+
+        [, $absentMembers] = $this->presentAndAbsent($windowStart, $date);
+
+        $filename = "absent_{$windowStart}_to_{$date}.csv";
+
+        return response()->streamDownload(function () use ($absentMembers) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Name', 'Phone', 'Church']);
+
+            foreach ($absentMembers as $m) {
+                fputcsv($handle, [
+                    "{$m->first_name} {$m->last_name}",
+                    $m->phone ?? 'No phone',
+                    $m->church ?? 'Unknown',
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    /**
      * Shared helper: given a date window, return [rollingAttendance, absentMembers].
      *
      * $rollingAttendance = Attendance rows within the window, one per member

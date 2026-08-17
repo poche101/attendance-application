@@ -243,12 +243,20 @@
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 @if($rollingAttendance->count() > 0)
+                <a href="{{ route('admin.dashboard.export.present', ['date' => $date]) }}"
+                   style="background:#DCFCE7; color:#166534; border:1.5px solid #86EFAC; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; text-decoration:none; white-space:nowrap; display:inline-block;">
+                    ⬇ Download Present CSV
+                </a>
                 <button type="button" onclick="document.getElementById('sms-present-modal').classList.remove('hidden')"
                     style="background:#166534; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
                     📲 Send SMS to Present ({{ $rollingAttendance->count() }})
                 </button>
                 @endif
                 @if($absentMembers->count() > 0)
+                <a href="{{ route('admin.dashboard.export.absent', ['date' => $date]) }}"
+                   style="background:#FEF2F2; color:#991B1B; border:1.5px solid #FECACA; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; text-decoration:none; white-space:nowrap; display:inline-block;">
+                    ⬇ Download Absent CSV
+                </a>
                 <button type="button" onclick="document.getElementById('sms-modal').classList.remove('hidden')"
                     style="background:#1E40AF; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap;">
                     📲 Send SMS to Absentees ({{ $absentMembers->count() }})

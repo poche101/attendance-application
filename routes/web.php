@@ -29,6 +29,8 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::post('/dashboard/sms/absent', [AdminController::class, 'sendAbsentSms'])->name('dashboard.sms.absent');
     Route::post('/dashboard/sms/present', [AdminController::class, 'sendPresentSms'])->name('dashboard.sms.present');
+    Route::get('/dashboard/export/present', [AdminController::class, 'exportPresent'])->name('dashboard.export.present');
+    Route::get('/dashboard/export/absent', [AdminController::class, 'exportAbsent'])->name('dashboard.export.absent');
     Route::get('/rankings', [AdminController::class, 'rankings'])->name('rankings');
 
     // Member Operations Management
